@@ -1,5 +1,5 @@
 <?php
-include 'partials/connexion.php';
+require_once('partials/connexion.php');
 
 // Requête SQL pour récupérer tous les champs nécessaires, triés par date décroissante
 $sql = "SELECT
@@ -31,6 +31,6 @@ while ($row = $result->fetch_assoc()) {
 }
 header('Content-Type: application/json');
 echo json_encode($courriers);
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 ?>
 

@@ -1,7 +1,7 @@
 <?php
-include 'partials/connexion.php';
+require_once('partials/connexion.php');
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+/* DB connection now handled by Singleton in connexion.php */
 
 if ($conn->connect_error) {
     die("Connexion échouée: " . $conn->connect_error);
@@ -18,5 +18,5 @@ if (isset($_GET['expediteur_id'])) {
     $stmt->close();
 }
 
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 ?>

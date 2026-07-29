@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-include 'partials/connexion.php';
+require_once('partials/connexion.php');
 
 if (isset($_GET['id']) && intval($_GET['id']) > 0) {
     $id = intval($_GET['id']);
@@ -30,6 +30,6 @@ if (isset($_GET['id']) && intval($_GET['id']) > 0) {
     echo json_encode($courriers);
 }
 
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 ?>
 

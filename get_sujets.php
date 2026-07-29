@@ -33,5 +33,5 @@ error_log("Sujets récupérés : " . print_r($sujets, true));
 header('Content-Type: application/json');
 echo json_encode($sujets);
 
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 ?>

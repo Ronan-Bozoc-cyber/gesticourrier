@@ -8,7 +8,7 @@ require_once(__DIR__ . '/partials/parametres.php');
 require_once($chemin . 'partials/connexion.php');
 
 // Connexion MySQL avec mysqli
-$conn = new mysqli($servername, $username, $password, $dbname);
+/* DB connection now handled by Singleton in connexion.php */
 
 if ($conn->connect_error) {
     die("Connexion échouée: " . $conn->connect_error);
@@ -38,5 +38,5 @@ if ($stmt->num_rows > 0 && password_verify($password, $hashed_password)) {
 }
 
 $stmt->close();
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 ?>

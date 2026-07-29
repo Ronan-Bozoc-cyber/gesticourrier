@@ -1,6 +1,6 @@
 <?php include 'admin/auth_check.php'; ?>
 <?php include 'partials/parametres.php'; ?>
-<?php include 'partials/connexion.php';
+<?php require_once('partials/connexion.php');
 
 // R�cup�rer le prochain num�ro d'ordre pour l'ann�e en cours
 $date = $_GET['date'] ?? date('Y-m-d');
@@ -14,7 +14,7 @@ $result = $stmt->get_result();
 $row = $result->fetch_assoc();
 $nextNumOrdre = ($row['max_num_ordre'] ?? 0) + 1;
 $stmt->close();
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 ?>
 <!DOCTYPE html>
 <html lang="fr">

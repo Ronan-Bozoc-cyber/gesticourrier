@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-include 'partials/connexion.php';
+require_once('partials/connexion.php');
 
 $date = $_GET['date'] ?? date('Y-m-d');
 $flux = $_GET['flux'] ?? 'ARRIVE';
@@ -14,7 +14,7 @@ $result = $stmt->get_result();
 $row = $result->fetch_assoc();
 $nextNumOrdre = ($row['max_num_ordre'] ?? 0) + 1;
 $stmt->close();
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 error_log("Date: $date, Flux: $flux, Année: $year");
 error_log("Max numéro d'ordre: " . ($row['max_num_ordre'] ?? 'NULL') . ", Prochain numéro d'ordre: $nextNumOrdre");
 

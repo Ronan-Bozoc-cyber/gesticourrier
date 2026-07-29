@@ -1,5 +1,5 @@
 <?php
-include 'partials/connexion.php';
+require_once('partials/connexion.php');
 
 $sql = "
 SELECT
@@ -34,7 +34,7 @@ if ($result->num_rows > 0) {
         $courriers[] = $row;
     }
 }
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 header('Content-Type: application/json');
 echo json_encode($courriers);
 ?>

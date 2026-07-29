@@ -1,6 +1,6 @@
 <?php
 
-include 'partials/connexion.php';
+require_once('partials/connexion.php');
 
 header('Content-Type: application/json');
 
@@ -194,7 +194,7 @@ if ($flux === 'DEPART' || $flux === 'TOUS') {
     $stmt_depart->close();
 }
 
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 
 echo json_encode($results);
 ?>

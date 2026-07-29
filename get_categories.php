@@ -1,6 +1,6 @@
 <?php
-include 'partials/connexion.php';
-$conn = new mysqli($servername, $username, $password, $dbname);
+require_once('partials/connexion.php');
+/* DB connection now handled by Singleton in connexion.php */
 
 if ($conn->connect_error) {
     die("Connexion échouée: " . $conn->connect_error);
@@ -16,7 +16,7 @@ if ($result->num_rows > 0) {
     }
 }
 
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 
 echo json_encode($categories);
 ?>

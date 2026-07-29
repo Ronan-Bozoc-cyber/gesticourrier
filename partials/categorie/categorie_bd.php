@@ -22,9 +22,9 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-include 'partials/connexion.php';
+require_once('partials/connexion.php');
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+/* DB connection now handled by Singleton in connexion.php */
 
 if ($conn->connect_error) {
     echo json_encode(["error" => "Connexion échouée: " . $conn->connect_error]);

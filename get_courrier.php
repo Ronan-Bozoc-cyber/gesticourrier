@@ -7,9 +7,9 @@ if (!isset($_SESSION['user_id'])) {
 
 header('Content-Type: application/json');
 
-include 'partials/connexion.php';
+require_once('partials/connexion.php');
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+/* DB connection now handled by Singleton in connexion.php */
 
 if ($conn->connect_error) {
     error_log("Connexion échouée: " . $conn->connect_error);  // Journalisation de l'erreur de connexion
@@ -53,7 +53,7 @@ if ($result->num_rows === 0) {
 $courrier = $result->fetch_assoc();
 
 $stmt->close();
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 
 error_log("Enregistrement récupéré avec succès: " . json_encode($courrier));  // Journalisation de la récupération réussie
 echo json_encode($courrier);

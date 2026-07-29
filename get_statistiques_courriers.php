@@ -5,7 +5,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Inclure la connexion à la base de données
-include 'partials/connexion.php';
+require_once('partials/connexion.php');
 
 // Vérifiez que la connexion à la base de données est établie
 if (!isset($conn) || $conn->connect_error) {
@@ -112,5 +112,5 @@ $monthData['categoriesDepart'] = getCategoriesDepart($conn, $month);
 header('Content-Type: application/json');
 echo json_encode($monthData);
 
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 ?>

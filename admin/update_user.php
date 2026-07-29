@@ -5,9 +5,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit;
 }
 
-include '../partials/connexion.php';
+require_once('../partials/connexion.php');
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+/* DB connection now handled by Singleton in connexion.php */
 
 if ($conn->connect_error) {
     die(json_encode(["error" => "Connexion échouée: " . $conn->connect_error]));
@@ -37,5 +37,5 @@ if ($stmt->execute()) {
 }
 
 $stmt->close();
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 ?>

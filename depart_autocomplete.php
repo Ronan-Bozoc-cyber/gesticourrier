@@ -1,7 +1,7 @@
 <?php
-include 'partials/connexion.php';
+require_once('partials/connexion.php');
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+/* DB connection now handled by Singleton in connexion.php */
 
 if ($conn->connect_error) {
     die("Connexion échouée: " . $conn->connect_error);
@@ -25,5 +25,5 @@ while ($row = $result->fetch_assoc()) {
 header('Content-Type: application/json');
 echo json_encode($courriers);
 
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 ?>

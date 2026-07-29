@@ -1,5 +1,5 @@
 <?php
-include 'partials/connexion.php';
+require_once('partials/connexion.php');
 
 $num_ordre = $_GET['num_ordre'] ?? null;
 $annee = $_GET['annee'] ?? null;
@@ -34,5 +34,5 @@ if ($num_ordre && $annee) {
     header('Content-Type: application/json');
     echo json_encode([]);
 }
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 ?>

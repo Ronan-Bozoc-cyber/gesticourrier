@@ -1,5 +1,5 @@
 <?php
-include 'partials/connexion.php';
+require_once('partials/connexion.php');
 include 'partials/parametres.php';
 session_start();
 $current_user_id = $_SESSION['user_id'];
@@ -396,5 +396,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->close();
 }
 
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 ?>

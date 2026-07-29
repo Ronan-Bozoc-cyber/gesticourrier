@@ -1,6 +1,6 @@
 <?php include 'admin/auth_check.php'; ?>
 <?php include 'partials/parametres.php'; ?>
-<?php include 'partials/connexion.php';
+<?php require_once('partials/connexion.php');
 // Récupérer le prochain numéro d'ordre pour l'année en cours
 $date = $_GET['date'] ?? date('Y-m-d');
 $year = date('Y', strtotime($date));
@@ -13,7 +13,7 @@ $result = $stmt->get_result();
 $row = $result->fetch_assoc();
 $nextNumOrdre = ($row['max_num_ordre'] ?? 0) + 1;
 $stmt->close();
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 ?>
 
 <!DOCTYPE html>

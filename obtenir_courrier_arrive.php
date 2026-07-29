@@ -3,7 +3,7 @@ header('Content-Type: application/json');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 include 'admin/auth_check.php';
-include 'partials/connexion.php';
+require_once('partials/connexion.php');
 
 // Récupère le numéro d'ordre et l'année
 $num_ordre = $_GET['num_ordre'] ?? null;
@@ -57,5 +57,5 @@ if ($result->num_rows === 0) {
 }
 
 $stmt->close();
-$conn->close();
+/* DB connection intentionally left open for Singleton */
 ?>
