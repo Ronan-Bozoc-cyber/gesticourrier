@@ -214,6 +214,17 @@ $stmt->close();
    
     <!-- Script pour gérer les fichiers et la modale -->
     <script>
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag)
+        );
+    }
     // Fonction pour fermer la modale d'erreur de taille de fichier
     function closeFileSizeErrorModal() {
         document.getElementById('fileSizeErrorModal').style.display = 'none';
@@ -332,7 +343,7 @@ $stmt->close();
                             const fullPath = urllogiciel + relativePath;
                             fileInfoElement.innerHTML = `
                                 <div class="file-actions">
-                                    <a href="#" onclick="openFileModal('${fullPath}')">${fileName}</a>
+                                    <a href="#" onclick="openFileModal('${escapeHTML(fullPath)}')">${escapeHTML(fileName)}</a>
                                     <button type="button" onclick="removeFile('${file.elementId}', '${file.inputName}')">Supprimer</button>
                                     <input type="hidden" name="${file.inputName}" value="${absolutePath}">
                                 </div>
@@ -402,7 +413,7 @@ $stmt->close();
                 const className = sizeInMo > 2 ? 'file-error' : 'file-ok';
                 fileInfoContainer.innerHTML = `
                     <div>
-                        <strong>${fileName}</strong> (${sizeInMo} Mo)
+                        <strong>${escapeHTML(fileName)}</strong> (${sizeInMo} Mo)
                         <span class="${className}">
                             ${sizeInMo > 2 ? ' (Trop volumineux !)' : ''}
                         </span>
