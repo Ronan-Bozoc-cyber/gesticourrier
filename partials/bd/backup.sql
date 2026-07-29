@@ -268,7 +268,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'admin','$2y$10$YBoCv7HhcnVOYIbPJKAyFOGd9k5WBAIcbCN2YnIGnyWI3VUytXC5a','admin@example.com','admin'),(2,'user1','$2y$10$YBoCv7HhcnVOYIbPJKAyFOGd9k5WBAIcbCN2YnIGnyWI3VUytXC5a','user1@example.com','user');
+INSERT INTO `users` VALUES (1,'admin','$2y$12$vTBNALtejqJIDb/xn1FFjOF.XYzyG6ZgEOAHOm.aJEQVyeGxYlAEa','admin@example.com','admin'),(2,'user1','$2y$12$vTBNALtejqJIDb/xn1FFjOF.XYzyG6ZgEOAHOm.aJEQVyeGxYlAEa','user1@example.com','user');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
