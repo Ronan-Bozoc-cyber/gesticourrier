@@ -1,7 +1,7 @@
 <?php
 $servername = "localhost";
-$username = "conques1";
-$password = "N8qLkof61dpDjqk";
+$username = "utilisateur";
+$password = "mdp1234";
 $dbname = "courriers_db";
 
 // Créer la connexion
