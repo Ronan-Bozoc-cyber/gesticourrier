@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      - DB_HOST=db
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:10.11
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=courriers_db
+      - MYSQL_USER=utilisateur
+      - MYSQL_PASSWORD=mdp1234
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./partials/bd/backup.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  db_data:
