@@ -1,0 +1,29 @@
+<script>
+// Mettre en évidence le lien actif
+document.addEventListener('DOMContentLoaded', function() {
+    const currentPage = window.location.pathname.split('/').pop();
+    const navLinks = {
+        'index.php': 'nav-accueil',
+        'arrive.php': 'nav-arrive',
+        'depart.php': 'nav-depart',
+        'recherche.php': 'nav-reports',
+        'contact.php': 'nav-contact',
+        'categorie.php': 'nav-categorie',
+        'utilisateur.php': 'nav-utilisateur',
+    	'parametrage.php': 'nav-parametrage'
+    };
+
+    if (navLinks[currentPage]) {
+        const navElement = document.getElementById(navLinks[currentPage]);
+
+        // Ajouter les classes en fonction de la page courante
+        if (currentPage === 'depart.php') {
+            navElement.classList.add('active-green');
+        } else if (currentPage === 'arrive.php') {
+            navElement.classList.add('active-orange');
+        } else {
+            navElement.classList.add('active');
+        }
+    }
+});
+</script>

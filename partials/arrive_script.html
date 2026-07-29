@@ -1,0 +1,237 @@
+<script>
+    // D�finir les variables JavaScript � partir des valeurs PHP
+    const urllogiciel = "<?php echo $urllogiciel; ?>";
+    const repertoire = "<?php echo $repertoire; ?>";
+    const chemin = "<?php echo $chemin; ?>";
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Charger le num�ro d'ordre suivant
+        fetch('get_next_num_ordre.php')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('num_ordre').value = data.nextNumOrdre;
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement du num�ro d\'ordre:', error);
+            });
+
+        // Charger les utilisateurs pour le menu d�roulant "Trait� par"
+        fetch('get_users.php')
+            .then(response => response.json())
+            .then(data => {
+                const traiteParSelect = document.getElementById('traite_par');
+                traiteParSelect.innerHTML = '';
+                const currentUser = document.getElementById('current_user').value;
+                data.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = user.username;
+                    if (user.id == currentUser) {
+                        option.selected = true;
+                    }
+                    traiteParSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des utilisateurs:', error);
+            });
+
+        // Charger les cat�gories
+        fetch('get_categories.php')
+            .then(response => response.json())
+            .then(data => {
+                const categorieSelect = document.getElementById('categorie_courrier');
+                categorieSelect.innerHTML = '';
+                data.forEach(categorie => {
+                    const option = document.createElement('option');
+                    option.value = categorie;
+                    option.textContent = categorie;
+                    categorieSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des cat�gories:', error);
+            });
+
+        // Charger les exp�diteurs
+        fetch('get_expediteurs.php')
+            .then(response => response.json())
+            .then(data => {
+                const expediteurSelect = document.getElementById('expediteur_id');
+                expediteurSelect.innerHTML = '';
+                data.forEach(expediteur => {
+                    const option = document.createElement('option');
+                    option.value = expediteur.id;
+                    option.textContent = expediteur.name;
+                    expediteurSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des expéditeurs:', error);
+            });
+
+        // Charger les courriers arriv�s
+        fetch('get_courriers_arrive.php')
+            .then(response => response.json())
+            .then(data => {
+                console.log("Donn�es re�ues :", data); // Pour d�bogage
+                const tableBody = document.getElementById('courriers-arrive-table').getElementsByTagName('tbody')[0];
+                tableBody.innerHTML = '';
+                let currentYear = null;
+
+                data.forEach(courrier => {
+                    const courrierDate = new Date(courrier.date);
+                    const courrierYear = courrierDate.getFullYear();
+
+                    // Ajouter une s�paration par ann�e
+                    if (courrierYear !== currentYear) {
+                        const yearRow = document.createElement('tr');
+                        yearRow.innerHTML = `<td colspan="10" style="background-color: #f0f0f0; font-weight: bold; text-align: center;">${courrierYear}</td>`;
+                        tableBody.appendChild(yearRow);
+                        currentYear = courrierYear;
+                    }
+
+                    // Ajouter la ligne du courrier
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${courrier.num_ordre}</td>
+                        <td>${courrier.date}</td>
+                        <td>${courrier.type_courrier}</td>
+                        <td>${courrier.expediteur}</td>
+                        <td>${courrier.sujet_courrier}</td>
+                        <td>${courrier.num_recommande}</td>
+                        <td>${courrier.categorie_courrier}</td>
+                        <td id="links-${courrier.num_ordre}-${courrierYear}"></td>
+                        <td>${courrier.courrier_depart_id || ''}</td>
+                        <td id="depart-links-${courrier.num_ordre}-${courrierYear}"></td>
+                    `;
+                    tableBody.appendChild(row);
+
+                    // Ajouter les liens vers les documents du courrier actuel
+                    const linksCell = document.getElementById(`links-${courrier.num_ordre}-${courrierYear}`);
+                    linksCell.innerHTML = ''; // R�initialiser compl�tement la cellule
+
+                    // Tableau pour suivre les chemins déjà trait�s pour ce courrier sp�cifique
+                    const usedPaths = [];
+
+                    // Boucle limit�e � 5 it�rations (car 5 documents maximum)
+                    for (let i = 1; i <= 5; i++) {
+                        const pathKey = `document_path${i > 1 ? i : ''}`;
+                        const label = `Document ${i}`;
+                        const path = courrier[pathKey];
+
+                        // V�rifier que le chemin existe, n'est pas vide et n'a pas d�j� �t� trait�
+                        if (path && path.trim() !== '' && !usedPaths.includes(path)) {
+                            usedPaths.push(path); // Ajouter le chemin au tableau des chemins trait�s
+
+                            const relativePath = path.replace(chemin, repertoire);
+                            const link = document.createElement('a');
+                            link.href = relativePath;
+                            link.textContent = label;
+                            link.style.cursor = 'pointer';
+                            link.style.color = 'blue';
+                            link.style.textDecoration = 'underline';
+                            link.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                window.open(relativePath, '_blank', 'width=794,height=900');
+                            });
+
+                            linksCell.appendChild(link);
+                            linksCell.appendChild(document.createElement('br'));
+                        }
+                    }
+
+                    // Charger les documents associ�s au courrier de d�part
+                    if (courrier.courrier_depart_id) {
+                        // CORRECTION ICI : Extraire l'ann�e du courrier de d�part
+                        const courrierDepartAnnee = courrier.courrier_depart_annee || courrierYear;
+                        
+                        fetch(`get_courrier_documents.php?num_ordre=${courrier.courrier_depart_id}&annee=${courrierDepartAnnee}`)
+                            .then(response => response.json())
+                            .then(departDocs => {
+                                const departLinksCell = document.getElementById(`depart-links-${courrier.num_ordre}-${courrierYear}`);
+                                if (departLinksCell) {
+                                    if (departDocs && departDocs.length > 0) {
+                                        departDocs.forEach((doc, index) => {
+                                            const departRelativePath = doc.replace(chemin, repertoire);
+                                            const departLink = document.createElement('a');
+                                            departLink.href = departRelativePath;
+                                            departLink.textContent = `Document ${index + 1}`;
+                                            departLink.style.cursor = 'pointer';
+                                            departLink.style.color = 'blue';
+                                            departLink.style.textDecoration = 'underline';
+                                            departLink.addEventListener('click', function(e) {
+                                                e.preventDefault();
+                                                window.open(departRelativePath, '_blank', 'width=794,height=900');
+                                            });
+                                            departLinksCell.appendChild(departLink);
+                                            departLinksCell.appendChild(document.createElement('br'));
+                                        });
+                                    } else {
+                                        departLinksCell.textContent = 'Aucun document';
+                                    }
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Erreur lors du chargement des documents associ�s au courrier de d�part:', error);
+                                const departLinksCell = document.getElementById(`depart-links-${courrier.num_ordre}-${courrierYear}`);
+                                if (departLinksCell) {
+                                    departLinksCell.textContent = 'Erreur de chargement';
+                                }
+                            });
+                    } else {
+                        const departLinksCell = document.getElementById(`depart-links-${courrier.num_ordre}-${courrierYear}`);
+                        if (departLinksCell) {
+                            departLinksCell.textContent = 'Aucun courrier de départ associé';
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des courriers arriv�s:', error);
+            });
+
+        // �v�nement pour r�cup�rer l'adresse de l'exp�diteur s�lectionn�
+        document.getElementById('expediteur_id').addEventListener('change', function() {
+            const expediteurId = this.value;
+            if (expediteurId) {
+                fetch(`get_adresse.php?expediteur_id=${expediteurId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('adresse').value = data.adresse;
+                        document.getElementById('new_expediteur').value = '';
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de la r�cup�ration de l\'adresse:', error);
+                    });
+            } else {
+                document.getElementById('adresse').value = '';
+            }
+        });
+
+        document.getElementById('new_expediteur').addEventListener('input', function() {
+            if (this.value) {
+                document.getElementById('expediteur_id').value = '';
+                document.getElementById('adresse').value = '';
+            }
+        });
+    });
+
+    function submitForm() {
+        const form = document.getElementById('courrier-form');
+        const formData = new FormData(form);
+        fetch('save_courrier.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(data => {
+            alert('Enregistrement du courrier r�ussi');
+            form.reset();
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de l\'enregistrement du courrier');
+        });
+    }
+</script>

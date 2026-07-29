@@ -1,0 +1,67 @@
+<script>
+$(document).ready(function() {
+    // Autocomplete pour le champ sujet
+    $.getJSON('get_sujets.php', function(data) {
+        console.log('Sujets reçus:', data); // Affichage des sujets reçus pour le débogage
+        $("#sujet_courrier").autocomplete({
+            source: data
+        });
+    });
+
+    // Charger les expéditeurs pour l'autocomplete
+    $.getJSON('get_expediteurs.php', function(data) {
+        console.log('Expéditeurs reçus:', data); // Affichage des expéditeurs reçus pour le débogage
+        $("#expediteur").autocomplete({
+            source: data,
+            select: function(event, ui) {
+                $('#expediteur').val(ui.item.label);
+                $('#expediteur_id').val(ui.item.value);
+                fetch(`get_adresse.php?expediteur_id=${ui.item.value}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        $('#adresse').val(data.adresse);
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de la récupération de l\'adresse:', error);
+                    });
+                return false;
+            }
+        });
+    });
+
+   // Charger les courriers arrivés pour l'autocomplete
+$.getJSON('arrive_autocomplete.php', function(data) {
+    console.log('Courriers arrivés reçus:', data); // Affichage des courriers arrivés pour le débogage
+    $("#courrier_arrive").autocomplete({
+        source: data,
+        select: function(event, ui) {
+            $('#courrier_arrive').val(ui.item.label);
+            $('#courrier_arrive_id').val(ui.item.value);
+            return false;
+        }
+    });
+});
+// Charger les courriers de départ pour l'autocomplete
+$.getJSON('depart_autocomplete.php', function(data) {
+    console.log('Courriers envoyés:', data); // Affichage des courriers arrivés pour le débogage
+    $("#courrier_depart").autocomplete({
+        source: data,
+        select: function(event, ui) {
+            $('#courrier_depart').val(ui.item.label);
+            $('#courrier_depart_id').val(ui.item.value);
+            return false;
+        }
+    });
+});
+
+
+    // Événement pour le nouveau expéditeur
+    $('#new_expediteur').on('input', function() {
+        if ($(this).val()) {
+            $('#expediteur').val('');
+            $('#expediteur_id').val('');
+            $('#adresse').val('');
+        }
+    });
+});
+</script>

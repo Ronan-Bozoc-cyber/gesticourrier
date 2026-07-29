@@ -1,0 +1,150 @@
+V1.2 Novembre 25
+-----------------
+1) Ajout de statistiques en page d'accueil.
+2) Gestion du passage d'une année à une autre
+   - modification de la base de données par ajout du champ année
+   - le champ année est autoalimenté par des TRIGGERS
+Trigger                  Event   Table              Statement                     Timing   Created
+update_annee_arrive      INSERT  courriers_arrive   SET NEW.annee = YEAR(NEW.date) BEFORE   2025-11-13 11:01:38.64
+update_annee_arrive_on_update UPDATE courriers_arrive SET NEW.annee = YEAR(NEW.date) BEFORE 2025-11-13 11:01:59.20
+update_annee_depart      INSERT  courriers_depart   SET NEW.annee = YEAR(NEW.date) BEFORE   2025-11-13 11:01:50.41
+update_annee_depart_on_update UPDATE courriers_depart SET NEW.annee = YEAR(NEW.date) BEFORE 2025-11-13 11:02:07.94
+
+   - renumérotation à 1 du Numéro d'ordre lors d'une nouvelle année
+   - la référence à un enregistrement se fait par l'année / le numéro d'ordre
+   - le listing des courriers est scindé en année
+
+3) Lors de la création d'un enregistrement une fenêtre modale avec une barre de progression permet de patienter jusqu'à la fin du processus.
+4) Lors de l'intégration des documents, le poids du fichier apparaît. S'il dépasse les 2 Mo un message en rouge apparaît.
+5) La modification d'un courrier se fait par le bouton de modification qui ouvre une fenêtre modale demandant l'année et le numéro d'ordre.
+6) L'association de courriers entrants aux courriers sortants (et réciproquement) est pleinement fonctionnelle.
+7) Suppression du bouton de suppression pour la gestion des contacts, des catégories et des utilisateurs.
+8) Le bouton pour envoyer un mail contenant les résultats de recherche a été enlevé.
+9) Pour la recherche : sélection de l'année et colonne dans laquelle apparaît un courrier associé avec la coloration adaptée (numéro d'ordre et liens vers le document associé).
+
+Pour l'installation :
+* le fichier permettant de préciser les URL de base : partials/parametres.php
+* la connexion à la base de données : partials/connexion.php
+
+Pour le passage à la nouvelle version, la base de données a été modifiée :
+
+ALTER TABLE courriers_arrive DROP INDEX num_ordre;
+ALTER TABLE courriers_depart DROP INDEX num_ordre;
+
+ALTER TABLE courriers_arrive ADD COLUMN annee INT;
+ALTER TABLE courriers_depart ADD COLUMN annee INT;
+
+UPDATE courriers_arrive SET annee = YEAR(date);
+UPDATE courriers_depart SET annee = YEAR(date);
+
+ALTER TABLE courriers_arrive ADD UNIQUE  (num_ordre,annee);
+ALTER TABLE courriers_depart ADD UNIQUE  (num_ordre,annee);
+
+CREATE TRIGGER update_annee_arrive BEFORE INSERT ON courriers_arrive FOR EACH ROW SET NEW.annee = YEAR(NEW.date);
+CREATE TRIGGER update_annee_depart BEFORE INSERT ON courriers_depart FOR EACH ROW SET NEW.annee = YEAR(NEW.date);
+
+CREATE TRIGGER update_annee_arrive_on_update BEFORE UPDATE ON courriers_arrive FOR EACH ROW SET NEW.annee = YEAR(NEW.date);
+CREATE TRIGGER update_annee_depart_on_update BEFORE UPDATE ON courriers_depart FOR EACH ROW SET NEW.annee = YEAR(NEW.date);
+
+SHOW TRIGGERS;
+
+-----------------
+V1.1 Janvier 25
+-----------------
+1) Correction dans l'upload afin de pouvoir choisir n'importe quel champ de Document 1 à 5
+2) Correction du fichier contact.php
+3) Explication des Modifications :
+   Param?tre -dPDFSETTINGS=/screen : Utilise des param?tres de compression conçus pour l'affichage à l'écran.
+   Param?tres de Downsampling :
+        -dDownsampleColorImages=true -dColorImageResolution=100 : Réduit la résolution des images en couleur à 100 DPI.
+        -dDownsampleGrayImages=true -dGrayImageResolution=100 : Réduit la résolution des images en niveaux de gris à 100 DPI.
+        -dDownsampleMonoImages=true -dMonoImageResolution=100 : Réduit la résolution des images en monochrome à 100 DPI.
+4) Intégration de favicon.ico à la page d'authentification
+5) Ajout dans le Header du lien vers version.txt + création de ce fichier afin de garder des traces des modifications.
+   Fichiers modifiés : save_courrier.php ; modifier_courrier_arrivebd.php ; modifier_courrier_departbd.php
+6) Autocomplétion pour l'association d'un courrier sortant à un courrier entrant
+7) Ajout dans les courriers arrivés de la possibilité d'associer un courrier sortant
+
+---------------
+ARCHITECTURE
+---------------
+login.php : identification 
+|-partials/parametres.php : variables générales
+|-login_handler.php
+|-admin/reset_password_request.php 
+|   |-admin/process_reset_request.php
+|       |-partials/connexion.php
+|       |-admin/reset_password.php
+|       |-admin/update_password.php
+logout.php
+index.php : accueil avec statistiques
+|-admin/auth_check.php : droits d'accés à la page
+|-partials/statistiques.js : script js pour l'obtention des statistiques / des graphiques
+|-partials/header.html : en-tête avec menu
+|-partials/stats.html : paramétrage des graphiques
+|-partials/menu_actif.html : coloration menu actif
+arrive.php : gestion des courriers arrivants
+|-admin/auth_check.php : droits d'accès à la page
+|-partials/parametres.php : paramètres ou définitions de variables comme l'URL
+|-partials/connexion.php : connexion à la base de données
+|-partials/modal.html : action sur les modals (ouverture, fermeture, ...)
+|-partials/header.html : en-tête avec menu
+|-partials/arrive_script.html : liste des courriers entrants
+|   |-get_next_num_ordre.php : Charger le numéro d'ordre suivant
+|   |-get_users.php : Charger les utilisateurs pour le menu déroulant "Traité par"
+|   |-get_categories.php : Charger les catégories
+|   |-get_expediteurs.php : Charger les expéditeurs
+|   |-get_courriers_arrive.php : Charger les courriers arrivés
+|   |-get_courrier_documents.php : Charger les documents associés au courrier de départ (requête SQL)
+|   |-get_adresse.php : événement pour récupérer l'adresse de l'expéditeur sélectionné
+|-partials/menu_actif.html : coloration menu actif
+|-partials/autocomplete.html : autocomplétion du formulaire   
+|   |-get_sujets.php : Autocomplete pour le champ sujet
+|   |-get_expediteurs.php : Charger les expéditeurs pour l'autocomplete
+|   |-arrive_autocomplete.php : Charger les courriers arrivés pour l'autocomplete
+|   |-depart_autocomplete.php : Charger les courriers de départ pour l'autocomplete
+|   |-get_years.php : Fonction pour remplir le menu déroulant des années référencées
+|   |-get_next_num_ordre.php : Fonction pour mettre à jour le numéro d'ordre en fonction de la date
+|   |-obtenir_courrier_arrive.php : Accès base de données pour obtenir les courriers arrivés
+|   |-save_courrier.php : sauvegarde du courrier
+depart.php : gestion des courriers partants
+|-admin/auth_check.php : droits d'accès à la page
+|-partials/parametres.php : parametres ou définitions de variables comme l'URL
+|-partials/connexion.php : connexion à la base de données
+|-partials/modal.html : action sur les modals (ouverture, fermeture, ...)
+|-partials/header.html : en-tête avec menu
+|-partials/depart_script.html : liste des courriers entrants
+|   |-get_next_num_ordre.php : Charger le numéro d'ordre suivant
+|   |-get_users.php : Charger les utilisateurs pour le menu déroulant "Traité par"
+|   |-get_categories.php : Charger les catégories
+|   |-get_expediteurs.php : Charger les expéditeurs
+|   |-get_courriers_depart.php : Charger les courriers partis
+|   |-get_courrier_documents_arrive.php : Charger les documents associés au courrier arrivé (requ?te SQL)
+|   |-get_adresse.php : événement pour récupérer l'adresse de l'expéditeur sélectionné
+|-partials/menu_actif.html : coloration menu actif
+|-partials/autocomplete.html : autocomplétion du formulaire  
+|   |-get_sujets.php : Autocomplete pour le champ sujet
+|   |-get_expediteurs.php : Charger les expéditeurs pour l'autocomplete
+|   |-arrive_autocomplete.php : Charger les courriers arrivés pour l'autocomplete
+|   |-depart_autocomplete.php : Charger les courriers de départ pour l'autocomplete
+|   |-get_years_depart.php : Fonction pour remplir le menu déroulant des années référencées
+|   |-get_next_num_ordre.php : Fonction pour mettre à jour le numéro d'ordre en fonction de la date
+|   |-obtenir_courrier_depart.php : Accès base de données pour obtenir les courriers partis
+|   |-save_courrier.php : sauvegarde du courrier 
+contacts.php : gestion des contacts (expéditeurs / destinataires)
+|-admin/auth_check.php : droits d'accès à la page
+|-partials/contact/contact_bd.php : requêtes SQL pour la gestion des contacts
+|   |-partials/connexion.php : connexion à la base de données
+|-partials/header.html : en-tête avec menu
+|-partials/contact/contact_script.php : script de gestion de la création ou de l'actualisation des contacts
+|-partials/menu_actif.html : coloration menu actif
+categorie.php : gestion des catégories
+|-admin/auth_check.php : droits d'accès à la page
+|-partials/categorie/categorie_bd.php : requêtes SQL pour la gestion des catégories
+|   |-partials/connexion.php : connexion à la base de données
+|-partials/header.html : en-tête avec menu
+|-partials/categorie/categorie_script.php : script de gestion de la création ou de l'actualisation des catégories
+|-partials/menu_actif.html : coloration menu actif
+utilisateur.php : gestion des utilisateurs
+|-admin/auth_check.php : droits d'accès à la page
+|-partials/utilisateur/utilisateur_bd.php : requêtes SQL pour la gestion

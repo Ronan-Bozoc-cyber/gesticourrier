@@ -1,0 +1,261 @@
+<script>
+    // Définir les variables JavaScript à partir des valeurs PHP
+    const urllogiciel = "<?php echo $urllogiciel; ?>";
+    const repertoire = "<?php echo $repertoire; ?>";
+    const chemin = "<?php echo $chemin; ?>";
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Charger le numéro d'ordre suivant
+        fetch('get_next_num_ordre-d.php')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('num_ordre').value = data.nextNumOrdre;
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement du numéro d\'ordre:', error);
+            });
+
+        // Charger les utilisateurs pour le menu déroulant "Traité par"
+        fetch('get_users.php')
+            .then(response => response.json())
+            .then(data => {
+                const traiteParSelect = document.getElementById('traite_par');
+                traiteParSelect.innerHTML = '';
+                const currentUser = document.getElementById('current_user').value;
+                data.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = user.username;
+                    if (user.id == currentUser) {
+                        option.selected = true;
+                    }
+                    traiteParSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des utilisateurs:', error);
+            });
+
+        // Charger les catégories
+        fetch('get_categories.php')
+            .then(response => response.json())
+            .then(data => {
+                const categorieSelect = document.getElementById('categorie_courrier');
+                categorieSelect.innerHTML = '';
+                data.forEach(categorie => {
+                    const option = document.createElement('option');
+                    option.value = categorie;
+                    option.textContent = categorie;
+                    categorieSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des catégories:', error);
+            });
+
+        // Charger les expéditeurs
+        fetch('get_expediteurs.php')
+            .then(response => response.json())
+            .then(data => {
+                const expediteurSelect = document.getElementById('expediteur_id');
+                expediteurSelect.innerHTML = '';
+                data.forEach(expediteur => {
+                    const option = document.createElement('option');
+                    option.value = expediteur.id;
+                    option.textContent = expediteur.name;
+                    expediteurSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des expéditeurs:', error);
+            });
+
+        // Charger les courriers départs
+        fetch('get_courriers_depart.php')
+            .then(response => response.json())
+            .then(data => {
+                console.log("Données reçues :", data); // Pour débogage
+                const tableBody = document.getElementById('courriers-depart-table').getElementsByTagName('tbody')[0];
+                tableBody.innerHTML = '';
+                let currentYear = null;
+
+                data.forEach(courrier => {
+                    const courrierDate = new Date(courrier.date);
+                    const courrierYear = courrierDate.getFullYear();
+
+                    // Ajouter une séparation par année
+                    if (courrierYear !== currentYear) {
+                        const yearRow = document.createElement('tr');
+                        yearRow.innerHTML = `<td colspan="10" style="background-color: #f0f0f0; font-weight: bold; text-align: center;">${courrierYear}</td>`;
+                        tableBody.appendChild(yearRow);
+                        currentYear = courrierYear;
+                    }
+
+                    // Ajouter la ligne du courrier
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${courrier.num_ordre}</td>
+                        <td>${courrier.date}</td>
+                        <td>${courrier.type_courrier}</td>
+                        <td>${courrier.expediteur}</td>
+                        <td>${courrier.sujet_courrier}</td>
+                        <td>${courrier.num_recommande}</td>
+                        <td>${courrier.categorie_courrier}</td>
+                        <td id="links-${courrier.num_ordre}-${courrierYear}"></td>
+                        <td>${courrier.courrier_arrive_num_ordre || ''}</td>
+                        <td id="arrive-links-${courrier.num_ordre}-${courrierYear}"></td>
+                    `;
+                    tableBody.appendChild(row);
+
+                    // Ajouter les liens vers les documents du courrier actuel
+                    const linksCell = document.getElementById(`links-${courrier.num_ordre}-${courrierYear}`);
+                    linksCell.innerHTML = ''; // Réinitialiser complètement la cellule
+
+                    // Tableau pour suivre les chemins déjà traités pour ce courrier spécifique
+                    const usedPaths = [];
+
+                    // Boucle limitée à 5 itérations (car 5 documents maximum)
+                    for (let i = 1; i <= 5; i++) {
+                        const pathKey = `document_path${i > 1 ? i : ''}`;
+                        const label = `Document ${i}`;
+                        const path = courrier[pathKey];
+
+                        // Vérifier que le chemin existe, n'est pas vide et n'a pas déjà été traité
+                        if (path && path.trim() !== '' && !usedPaths.includes(path)) {
+                            usedPaths.push(path); // Ajouter le chemin au tableau des chemins traités
+
+                            const relativePath = path.replace(chemin, repertoire);
+                            const link = document.createElement('a');
+                            link.href = relativePath;
+                            link.textContent = label;
+                            link.style.cursor = 'pointer';
+                            link.style.color = 'blue';
+                            link.style.textDecoration = 'underline';
+                            link.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                window.open(relativePath, '_blank', 'width=794,height=900');
+                            });
+
+                            linksCell.appendChild(link);
+                            linksCell.appendChild(document.createElement('br'));
+                        }
+                    }
+
+                    // Charger les documents associés au courrier arrivé
+                    if (courrier.courrier_arrive_num_ordre) {
+                        // CORRECTION ICI : Extraire l'année du courrier arrivé
+                        const courrierArriveAnnee = courrier.courrier_arrive_annee || courrierYear;
+                        
+                        fetch(`get_courrier_documents_arrive.php?num_ordre=${courrier.courrier_arrive_num_ordre}&annee=${courrierArriveAnnee}`)
+                            .then(response => response.json())
+                            .then(arriveDocs => {
+                                const arriveLinksCell = document.getElementById(`arrive-links-${courrier.num_ordre}-${courrierYear}`);
+                                if (arriveLinksCell) {
+                                    if (arriveDocs && arriveDocs.length > 0) {
+                                        arriveDocs.forEach((doc, index) => {
+                                            const arriveRelativePath = doc.replace(chemin, repertoire);
+                                            const arriveLink = document.createElement('a');
+                                            arriveLink.href = arriveRelativePath;
+                                            arriveLink.textContent = `Document ${index + 1}`;
+                                            arriveLink.style.cursor = 'pointer';
+                                            arriveLink.style.color = 'blue';
+                                            arriveLink.style.textDecoration = 'underline';
+                                            arriveLink.addEventListener('click', function(e) {
+                                                e.preventDefault();
+                                                window.open(arriveRelativePath, '_blank', 'width=794,height=900');
+                                            });
+                                            arriveLinksCell.appendChild(arriveLink);
+                                            arriveLinksCell.appendChild(document.createElement('br'));
+                                        });
+                                    } else {
+                                        arriveLinksCell.textContent = 'Aucun document';
+                                    }
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Erreur lors du chargement des documents associés au courrier arrivé:', error);
+                                const arriveLinksCell = document.getElementById(`arrive-links-${courrier.num_ordre}-${courrierYear}`);
+                                if (arriveLinksCell) {
+                                    arriveLinksCell.textContent = 'Erreur de chargement';
+                                }
+                            });
+                    } else {
+                        const arriveLinksCell = document.getElementById(`arrive-links-${courrier.num_ordre}-${courrierYear}`);
+                        if (arriveLinksCell) {
+                            arriveLinksCell.textContent = 'Aucun courrier arrivé associé';
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des courriers départs:', error);
+            });
+
+        // Charger les courriers arrivés associés et configurer l'autocomplete
+        fetch('get_menu_courrier_arriver_associe.php')
+            .then(response => response.json())
+            .then(data => {
+                const courrierArriveInput = document.getElementById('courrier_arrive');
+                const courrierArriveIdInput = document.getElementById('courrier_arrive_id');
+                const courrierArriveList = data.map(courrier => ({
+                    label: `${courrier.num_ordre} - ${courrier.sujet} - ${courrier.expediteur} - ${courrier.date}`,
+                    value: courrier.id
+                }));
+                // Initialiser l'autocomplete
+                $(courrierArriveInput).autocomplete({
+                    source: courrierArriveList,
+                    select: function(event, ui) {
+                        courrierArriveInput.value = ui.item.label;
+                        courrierArriveIdInput.value = ui.item.value;
+                        return false;
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des courriers arrivés:', error);
+            });
+
+        // Événement pour récupérer l'adresse de l'expéditeur sélectionné
+        document.getElementById('expediteur_id').addEventListener('change', function() {
+            const expediteurId = this.value;
+            if (expediteurId) {
+                fetch(`get_adresse.php?expediteur_id=${expediteurId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('adresse').value = data.adresse;
+                        document.getElementById('new_expediteur').value = '';
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de la récupération de l\'adresse:', error);
+                    });
+            } else {
+                document.getElementById('adresse').value = '';
+            }
+        });
+
+        document.getElementById('new_expediteur').addEventListener('input', function() {
+            if (this.value) {
+                document.getElementById('expediteur_id').value = '';
+                document.getElementById('adresse').value = '';
+            }
+        });
+    });
+
+    function submitForm() {
+        const form = document.getElementById('courrier-form');
+        const formData = new FormData(form);
+        fetch('save_courrier.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(data => {
+            alert('Enregistrement du courrier réussi');
+            form.reset();
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de l\'enregistrement du courrier');
+        });
+    }
+</script>
