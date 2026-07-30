@@ -27,64 +27,72 @@ if (isset($_GET['msg'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['is_restore_upload'])) {
-    // 1. Coordonnées Organisme
-    $org_settings['raison_sociale'] = trim($_POST['raison_sociale'] ?? '');
-    $org_settings['adresse']        = trim($_POST['adresse'] ?? '');
-    $org_settings['code_postal']    = trim($_POST['code_postal'] ?? '');
-    $org_settings['ville']          = trim($_POST['ville'] ?? '');
-    $org_settings['telephone']      = trim($_POST['telephone'] ?? '');
+    $action_tab = $_POST['action_tab'] ?? '';
 
-    // 2. Configuration du Tampon d'Enregistrement
-    $org_settings['tampon_active']        = isset($_POST['tampon_active']) ? '1' : '0';
-    $org_settings['tampon_position']      = trim($_POST['tampon_position'] ?? 'top-right');
-    $org_settings['tampon_couleur']       = trim($_POST['tampon_couleur'] ?? '#2563eb');
-    $org_settings['tampon_opacite']       = trim($_POST['tampon_opacite'] ?? '85');
-    $org_settings['tampon_taille']        = trim($_POST['tampon_taille'] ?? 'medium');
-    $org_settings['tampon_bordure']       = trim($_POST['tampon_bordure'] ?? 'double');
-    $org_settings['tampon_show_org']      = isset($_POST['tampon_show_org']) ? '1' : '0';
-    $org_settings['tampon_show_num']      = isset($_POST['tampon_show_num']) ? '1' : '0';
-    $org_settings['tampon_show_date']     = isset($_POST['tampon_show_date']) ? '1' : '0';
-    $org_settings['tampon_show_categorie']= isset($_POST['tampon_show_categorie']) ? '1' : '0';
-    $org_settings['tampon_texte_custom']  = trim($_POST['tampon_texte_custom'] ?? '');
+    if ($action_tab === 'tab1') {
+        $org_settings['raison_sociale'] = trim($_POST['raison_sociale'] ?? '');
+        $org_settings['adresse']        = trim($_POST['adresse'] ?? '');
+        $org_settings['code_postal']    = trim($_POST['code_postal'] ?? '');
+        $org_settings['ville']          = trim($_POST['ville'] ?? '');
+        $org_settings['telephone']      = trim($_POST['telephone'] ?? '');
+        
+        if (isset($_FILES['logo'])) {
+            if ($_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+                $fileTmpPath = $_FILES['logo']['tmp_name'];
+                $fileName    = $_FILES['logo']['name'];
+                $fileSize    = $_FILES['logo']['size'];
 
-    // 3. Configuration de la Sauvegarde Programmable (Backup)
-    $org_settings['backup_active']          = isset($_POST['backup_active']) ? '1' : '0';
-    $org_settings['backup_frequency']       = trim($_POST['backup_frequency'] ?? 'daily');
-    $org_settings['backup_time']            = trim($_POST['backup_time'] ?? '02:00');
-    $org_settings['backup_retention']       = trim($_POST['backup_retention'] ?? '14');
-    $org_settings['backup_include_uploads'] = isset($_POST['backup_include_uploads']) ? '1' : '0';
+                $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'svg'];
+                $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-    // 4. Gestion du Logo
-    if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
-        $fileTmpPath = $_FILES['logo']['tmp_name'];
-        $fileName    = $_FILES['logo']['name'];
-        $fileSize    = $_FILES['logo']['size'];
+                if (in_array($fileExtension, $allowedExtensions)) {
+                    if ($fileSize <= 2 * 1024 * 1024) {
+                        $newFileName = 'logo-custom.' . $fileExtension;
+                        $uploadFileDir = __DIR__ . '/img/';
 
-        $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'svg'];
-        $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                        if (!is_dir($uploadFileDir)) {
+                            mkdir($uploadFileDir, 0755, true);
+                        }
 
-        if (in_array($fileExtension, $allowedExtensions)) {
-            if ($fileSize <= 2 * 1024 * 1024) {
-                $newFileName = 'logo-custom.' . $fileExtension;
-                $uploadFileDir = __DIR__ . '/img/';
+                        $dest_path = $uploadFileDir . $newFileName;
 
-                if (!is_dir($uploadFileDir)) {
-                    mkdir($uploadFileDir, 0755, true);
-                }
-
-                $dest_path = $uploadFileDir . $newFileName;
-
-                if (move_uploaded_file($fileTmpPath, $dest_path)) {
-                    $org_settings['logo_filename'] = $newFileName;
+                        if (move_uploaded_file($fileTmpPath, $dest_path)) {
+                            $org_settings['logo_filename'] = $newFileName;
+                        } else {
+                            $error_msg = "Erreur lors du déplacement du fichier logo téléversé.";
+                        }
+                    } else {
+                        $error_msg = "Le fichier logo est trop volumineux (Maximum 2 Mo).";
+                    }
                 } else {
-                    $error_msg = "Erreur lors du déplacement du fichier logo téléversé.";
+                    $error_msg = "Extension non autorisée pour le logo (Seuls JPG, PNG, WEBP et SVG sont acceptés).";
                 }
-            } else {
-                $error_msg = "Le fichier logo est trop volumineux (Maximum 2 Mo).";
+            } elseif ($_FILES['logo']['error'] !== UPLOAD_ERR_NO_FILE) {
+                if ($_FILES['logo']['error'] == UPLOAD_ERR_INI_SIZE) {
+                    $error_msg = "Erreur : Le fichier logo dépasse la limite autorisée par le serveur (2 Mo max).";
+                } else {
+                    $error_msg = "Erreur lors du téléversement du logo (Code erreur: " . $_FILES['logo']['error'] . ").";
+                }
             }
-        } else {
-            $error_msg = "Extension non autorisée pour le logo (Seuls JPG, PNG, WEBP et SVG sont acceptés).";
         }
+    } elseif ($action_tab === 'tab2') {
+        $org_settings['tampon_active']        = isset($_POST['tampon_active']) ? '1' : '0';
+        $org_settings['tampon_position']      = trim($_POST['tampon_position'] ?? 'top-right');
+        $org_settings['tampon_couleur']       = trim($_POST['tampon_couleur'] ?? '#2563eb');
+        $org_settings['tampon_opacite']       = trim($_POST['tampon_opacite'] ?? '85');
+        $org_settings['tampon_taille']        = trim($_POST['tampon_taille'] ?? 'medium');
+        $org_settings['tampon_bordure']       = trim($_POST['tampon_bordure'] ?? 'double');
+        $org_settings['tampon_show_org']      = isset($_POST['tampon_show_org']) ? '1' : '0';
+        $org_settings['tampon_show_num']      = isset($_POST['tampon_show_num']) ? '1' : '0';
+        $org_settings['tampon_show_date']     = isset($_POST['tampon_show_date']) ? '1' : '0';
+        $org_settings['tampon_show_categorie']= isset($_POST['tampon_show_categorie']) ? '1' : '0';
+        $org_settings['tampon_texte_custom']  = trim($_POST['tampon_texte_custom'] ?? '');
+    } elseif ($action_tab === 'tab3') {
+        $org_settings['backup_active']          = isset($_POST['backup_active']) ? '1' : '0';
+        $org_settings['backup_frequency']       = trim($_POST['backup_frequency'] ?? 'daily');
+        $org_settings['backup_time']            = trim($_POST['backup_time'] ?? '02:00');
+        $org_settings['backup_retention']       = trim($_POST['backup_retention'] ?? '14');
+        $org_settings['backup_include_uploads'] = isset($_POST['backup_include_uploads']) ? '1' : '0';
     }
 
     if (empty($error_msg)) {
@@ -403,6 +411,7 @@ function size_format($bytes) {
     <!-- ONGLET 1 : ORGANISME & LOGO -->
     <div id="tab-org" class="tab-content-panel" style="display: block;">
         <form action="parametrage.php" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="action_tab" value="tab1">
             <div class="form-section-card" style="border-top: 4px solid #2563eb;">
                 <div class="form-section-header">
                     <h2 style="color: #2563eb;"><i class="fas fa-building"></i> 1. Coordonnées de l'organisme (Affichées dans l'en-tête)</h2>
@@ -468,6 +477,8 @@ function size_format($bytes) {
     <!-- ONGLET 2 : TAMPON D'ENREGISTREMENT -->
     <div id="tab-tampon" class="tab-content-panel" style="display: none;">
         <form action="parametrage.php" method="post">
+                    <input type="hidden" name="action_tab" value="tab3">
+                    <input type="hidden" name="action_tab" value="tab2">
             <div class="form-section-card" style="border-top: 4px solid #2563eb;">
                 <div class="form-section-header">
                     <h2 style="color: #2563eb;"><i class="fas fa-stamp"></i> Paramètres du Tampon / Empreinte d'Enregistrement</h2>
