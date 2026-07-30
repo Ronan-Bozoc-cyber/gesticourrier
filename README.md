@@ -34,7 +34,7 @@ Gesti Courrier propose un utilitaire d'installation en ligne de commande ultra-i
 
 1. **Cloner le dépôt sur votre serveur :**
    ```bash
-   git clone <votre-url-github>
+   git clone https://github.com/Ronan-Bozoc-cyber/gesticourrier.git
    cd GestiCourrier
    ```
 
