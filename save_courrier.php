@@ -20,46 +20,200 @@ function getNextNumOrdre($conn, $flux, $date) {
     return $nextNumOrdre;
 }
 
-// Fonction pour appliquer le cachet et compresser un PDF (améliorée pour la qualité)
-function addStampAndCompressPDF($filePath, $flux, $num_ordre, $date) {
-    $stampText = "MAIRIE DE CONQUES SUR ORBIEL | Flux: $flux | NUMERO ORDRE: $num_ordre | Date: $date";
-    $tempFile = tempnam(sys_get_temp_dir(), 'stamped_') . '.pdf';
-    $outputFile = tempnam(sys_get_temp_dir(), 'compressed_') . '.pdf';
-    $escapedFilePath = escapeshellarg($filePath);
-    $escapedTempFile = escapeshellarg($tempFile);
+function hexToRgba($hex, $opacityPercent = 85) {
+    $hex = ltrim($hex, '#');
+    if (strlen($hex) === 3) {
+        $r = hexdec(str_repeat(substr($hex, 0, 1), 2));
+        $g = hexdec(str_repeat(substr($hex, 1, 1), 2));
+        $b = hexdec(str_repeat(substr($hex, 2, 1), 2));
+    } else {
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+    }
+    $alpha = round($opacityPercent / 100, 2);
+    return "rgba($r,$g,$b,$alpha)";
+}
+
+// Fonction pour appliquer le cachet et compresser un document (conforme aux paramètres exacts de settings.json)
+function addStampAndCompressPDF($filePath, $flux, $num_ordre, $date, $categorie = '') {
+    global $org_settings;
+
+    $defaultSettings = [
+        'raison_sociale'       => 'Mairie de Conques-sur-Orbiel',
+        'tampon_active'        => '1',
+        'tampon_disposition'   => 'bloc',
+        'tampon_position'      => 'top-right',
+        'tampon_couleur'       => '#2563eb',
+        'tampon_opacite'       => '85',
+        'tampon_taille'        => 'medium',
+        'tampon_bordure'       => 'double',
+        'tampon_show_org'      => '1',
+        'tampon_show_num'      => '1',
+        'tampon_show_date'     => '1',
+        'tampon_show_categorie'=> '1',
+        'tampon_texte_custom'  => 'ARRIVÉE - COURRIER'
+    ];
+
+    if (empty($org_settings)) {
+        $settingsFile = __DIR__ . '/data/settings.json';
+        if (file_exists($settingsFile)) {
+            $decoded = json_decode(file_get_contents($settingsFile), true);
+            $org_settings = is_array($decoded) ? array_merge($defaultSettings, $decoded) : $defaultSettings;
+        } else {
+            $org_settings = $defaultSettings;
+        }
+    } else {
+        $org_settings = array_merge($defaultSettings, $org_settings);
+    }
+
+    if (isset($org_settings['tampon_active']) && $org_settings['tampon_active'] === '0') {
+        return;
+    }
+
+    $colorHex = $org_settings['tampon_couleur'] ?? '#2563eb';
+    $opacityVal = intval($org_settings['tampon_opacite'] ?? 85);
+    $colorRgba = hexToRgba($colorHex, $opacityVal);
+
+    $position = $org_settings['tampon_position'] ?? 'top-right';
+    $sizeStr = $org_settings['tampon_taille'] ?? 'medium';
+    $borderStyle = $org_settings['tampon_bordure'] ?? 'double';
+
+    $pointSize = 12;
+    if ($sizeStr === 'small') $pointSize = 10;
+    if ($sizeStr === 'large') $pointSize = 14;
+    if ($sizeStr === 'xlarge') $pointSize = 16;
+
+    // Construction des lignes du tampon
+    $lines = [];
+    if (!empty($org_settings['tampon_texte_custom'])) {
+        $lines[] = mb_strtoupper($org_settings['tampon_texte_custom']);
+    }
+    if (($org_settings['tampon_show_org'] ?? '1') === '1' && !empty($org_settings['raison_sociale'])) {
+        $lines[] = $org_settings['raison_sociale'];
+    }
+    if (($org_settings['tampon_show_num'] ?? '1') === '1' && !empty($num_ordre)) {
+        $lines[] = "N° Ordre : " . $num_ordre;
+    }
+    if (($org_settings['tampon_show_date'] ?? '1') === '1' && !empty($date)) {
+        $dateFormatted = date('d/m/Y', strtotime($date));
+        $lines[] = ($flux === 'ARRIVE' ? "Reçu le : " : "Parti le : ") . $dateFormatted;
+    }
+    if (($org_settings['tampon_show_categorie'] ?? '1') === '1' && !empty($categorie)) {
+        $lines[] = "Catégorie : " . $categorie;
+    }
+
+    $disposition = $org_settings['tampon_disposition'] ?? 'bloc';
+    $separator = ($disposition === 'ligne') ? '  |  ' : "\n";
+    $stampText = implode($separator, $lines);
+
+    if (empty($stampText)) {
+        $stampText = "ARRIVÉE - COURRIER";
+    }
+
+    $tempStampLabel = tempnam(sys_get_temp_dir(), 'stamp_lbl_') . '.png';
+    $tempStampedPdf = tempnam(sys_get_temp_dir(), 'stamped_pdf_') . '.pdf';
+    $outputFile = tempnam(sys_get_temp_dir(), 'compressed_pdf_') . '.pdf';
+
+    $escapedText = escapeshellarg($stampText);
+    $escapedColor = escapeshellarg($colorRgba);
+    $escapedLabel = escapeshellarg($tempStampLabel);
+
+    $fileExt = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+    $escapedInputFile = escapeshellarg(($fileExt === 'pdf') ? ($filePath . '[0]') : $filePath);
+    $escapedStampedPdf = escapeshellarg($tempStampedPdf);
     $escapedOutputFile = escapeshellarg($outputFile);
-    $escapedStampText = escapeshellarg($stampText);
 
-    // Appliquer le cachet avec ImageMagick (meilleure résolution et qualité)
-    $cmd = "convert -density 300 -quality 100 -gravity north -background white -splice 0x100 $escapedFilePath -gravity North -fill 'rgba(255,0,0,0.5)' -pointsize 12 -annotate +0+36 $escapedStampText $escapedTempFile";
-    exec($cmd . " 2>&1", $output, $return_var);
-    if ($return_var != 0) {
-        throw new Exception("Erreur lors de l'application du cachet : " . implode("\n", $output));
+    // 1. Création de l'image de l'empreinte encadrée avec ImageMagick
+    $borderWidth = ($borderStyle === 'none') ? 0 : (($borderStyle === 'double') ? 4 : 2);
+    $bgAlpha = round($opacityVal / 100 * 0.95, 2);
+    $cmdLabel = "convert -background 'rgba(255,255,255,$bgAlpha)' -fill $escapedColor -pointsize $pointSize -gravity center label:$escapedText -bordercolor $escapedColor -border ${borderWidth}x${borderWidth} $escapedLabel 2>&1";
+    exec($cmdLabel, $out1, $res1);
+
+    // Positionnement gravity
+    $gravity = 'NorthEast';
+    if ($position === 'top-left') $gravity = 'NorthWest';
+    if ($position === 'bottom-right') $gravity = 'SouthEast';
+    if ($position === 'bottom-left') $gravity = 'SouthWest';
+    if ($position === 'center') $gravity = 'Center';
+
+    if ($res1 === 0 && file_exists($tempStampLabel)) {
+        if ($fileExt === 'pdf') {
+            // Déterminer le nombre de pages du PDF
+            $escapedOriginalPdf = escapeshellarg($filePath);
+            $pageCountCmd = "identify -format \"%n\n\" $escapedOriginalPdf | head -n 1";
+            exec($pageCountCmd, $pcOut, $pcRes);
+            $pageCount = intval(trim($pcOut[0] ?? '1'));
+
+            // 2. Tamponner la première page (index 0)
+            $cmdComposite = "convert -density 150 {$escapedOriginalPdf}[0] $escapedLabel -gravity $gravity -geometry +30+30 -composite $escapedStampedPdf 2>&1";
+            exec($cmdComposite, $out2, $res2);
+
+            if ($res2 === 0 && file_exists($tempStampedPdf) && filesize($tempStampedPdf) > 0) {
+                if ($pageCount > 1) {
+                    // Extraire les pages restantes (page 2 à N)
+                    $tempRestPdf = tempnam(sys_get_temp_dir(), 'rest_pdf_') . '.pdf';
+                    $escapedRestPdf = escapeshellarg($tempRestPdf);
+
+                    $extractRestCmd = "gs -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dQUIET -dFirstPage=2 -sOutputFile=$escapedRestPdf $escapedOriginalPdf 2>&1";
+                    exec($extractRestCmd, $eOut, $eRes);
+
+                    if ($eRes === 0 && file_exists($tempRestPdf) && filesize($tempRestPdf) > 0) {
+                        // Fusionner la 1ère page tamponnée avec le reste des pages
+                        $gsMergeCmd = "gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/prepress -dNOPAUSE -dQUIET -dBATCH -sOutputFile=$escapedOutputFile $escapedStampedPdf $escapedRestPdf 2>&1";
+                        exec($gsMergeCmd, $mOut, $mRes);
+
+                        if ($mRes === 0 && file_exists($outputFile) && filesize($outputFile) > 0) {
+                            @copy($outputFile, $filePath);
+                            @unlink($outputFile);
+                        } else {
+                            @copy($tempStampedPdf, $filePath);
+                        }
+                        @unlink($tempRestPdf);
+                    } else {
+                        @copy($tempStampedPdf, $filePath);
+                    }
+                } else {
+                    // PDF de 1 seule page
+                    $gsCmd = "gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/prepress -dNOPAUSE -dQUIET -dBATCH -sOutputFile=$escapedOutputFile $escapedStampedPdf 2>&1";
+                    exec($gsCmd, $gsOutput, $gsReturnVar);
+
+                    if ($gsReturnVar === 0 && file_exists($outputFile) && filesize($outputFile) > 0) {
+                        @copy($outputFile, $filePath);
+                        @unlink($outputFile);
+                    } else {
+                        @copy($tempStampedPdf, $filePath);
+                    }
+                }
+                @unlink($tempStampedPdf);
+            } else {
+                error_log("Erreur composite ImageMagick : " . implode(" ", $out2));
+            }
+        } else {
+            // Fichier Image (JPG, PNG, WEBP)
+            $escapedInputImg = escapeshellarg($filePath);
+            $cmdComposite = "convert $escapedInputImg $escapedLabel -gravity $gravity -geometry +30+30 -composite $escapedStampedPdf 2>&1";
+            exec($cmdComposite, $out2, $res2);
+
+            if ($res2 === 0 && file_exists($tempStampedPdf) && filesize($tempStampedPdf) > 0) {
+                @copy($tempStampedPdf, $filePath);
+                @unlink($tempStampedPdf);
+            }
+        }
+        @unlink($tempStampLabel);
+    } else {
+        error_log("Erreur label ImageMagick : " . implode(" ", $out1));
     }
-
-    // Compresser le fichier PDF avec Ghostscript (meilleure qualité)
-    $gsCmd = "gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/prepress -dNOPAUSE -dQUIET -dBATCH -sOutputFile=$escapedOutputFile $escapedTempFile";
-    exec($gsCmd . " 2>&1", $gsOutput, $gsReturnVar);
-    if ($gsReturnVar != 0) {
-        throw new Exception("Erreur lors de la compression du fichier PDF : " . implode("\n", $gsOutput));
-    }
-
-    if (!copy($outputFile, $filePath)) {
-        throw new Exception("Erreur lors de la copie du fichier compressé.");
-    }
-
-    unlink($tempFile);
-    unlink($outputFile);
 }
 
 // Fonction pour gérer l'upload d'un fichier
-function handleFileUpload($fileKey, $uploadDir, $num_ordre, $flux, $expediteur_name, $sujet_courrier, $date) {
+function handleFileUpload($fileKey, $uploadDir, $num_ordre, $flux, $expediteur_name, $sujet_courrier, $date, $categorie = '') {
     if (!isset($_FILES[$fileKey]) || $_FILES[$fileKey]['error'] !== UPLOAD_ERR_OK) {
         error_log("Fichier $fileKey non uploadé ou erreur : " . ($_FILES[$fileKey]['error'] ?? 'non défini'));
         return null;
     }
     $file = $_FILES[$fileKey];
-    $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
+    $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
     $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     // Vérification de la taille du fichier (max 2 Mo)
     $maxFileSize = 2 * 1024 * 1024; // 2 Mo
@@ -77,8 +231,8 @@ function handleFileUpload($fileKey, $uploadDir, $num_ordre, $flux, $expediteur_n
     if (!move_uploaded_file($file['tmp_name'], $uploadFilePath)) {
         throw new Exception("Erreur lors de l'upload du fichier $fileKey.");
     }
-    if ($fileExtension === 'pdf') {
-        addStampAndCompressPDF($uploadFilePath, $flux, $num_ordre, $date);
+    if (in_array($fileExtension, ['pdf', 'jpg', 'jpeg', 'png', 'webp'])) {
+        addStampAndCompressPDF($uploadFilePath, $flux, $num_ordre, $date, $categorie);
     }
     // Retourne le chemin absolu
     return $uploadFilePath;
@@ -202,7 +356,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $flux,
                 $expediteur_name,
                 $sujet_courrier,
-                $date
+                $date,
+                $categorie_courrier
             );
             error_log("Fichier $fileKey traité avec succès : " . $documentPaths[$fileKey]);
         } catch (Exception $e) {

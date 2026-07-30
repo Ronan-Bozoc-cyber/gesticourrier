@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    imagemagick \
+    ghostscript \
     && rm -rf /var/lib/apt/lists/*
 
 # Configurer et installer les extensions PHP

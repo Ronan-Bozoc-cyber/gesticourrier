@@ -1,12 +1,10 @@
    <script>  
-        // Palette de 30 couleurs différentes (sans les deux premières couleurs utilisées pour les deux premiers camemberts)
-        const reservedColors = ['#FFA500', '#008000']; // Couleurs réservées pour les deux premiers camemberts
+        // Palette de couleurs pour les camemberts de catégories
+        const reservedColors = ['#f59e0b', '#10b981']; // Jaune (Arrivé) & Vert (Départ)
         const colorPalette = [
-            '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#FF6384', '#36A2EB',
-            '#FFD700', '#8A2BE2', '#20B2AA', '#FF1493', '#FF7F50', '#6495ED',
-            '#DC143C', '#00BFFF', '#00FA9A', '#FFDAB9', '#7CFC00', '#9932CC',
-            '#FF00FF', '#8B0000', '#48D1CC', '#FF4500', '#DA70D6', '#32CD32',
-            '#FF69B4', '#40E0D0', '#BA55D3', '#1E90FF', '#228B22', '#FF8C00'
+            '#2563eb', '#8b5cf6', '#ec4899', '#06b6d4', '#f59e0b', '#10b981',
+            '#6366f1', '#14b8a6', '#f97316', '#a855f7', '#0284c7', '#84cc16',
+            '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#6b7280', '#0f172a'
         ];
 
         // Variables globales pour stocker les graphiques
@@ -22,13 +20,13 @@
         // Fonction pour créer un tableau de données
         function createDataTable(containerId, labels, data) {
             const container = document.getElementById(containerId);
-            let tableHTML = '<table><thead><tr><th>Catégorie</th><th>Nombre</th><th>Pourcentage</th></tr></thead><tbody>';
+            let tableHTML = '<table style="width:100%; border-collapse:collapse; margin-top:12px; font-size:0.88rem;"><thead><tr style="background:#f8fafc; border-bottom:1.5px solid #cbd5e1;"><th style="padding:8px 12px; text-align:left; color:#334155;">Catégorie / Type</th><th style="padding:8px 12px; text-align:center; color:#334155;">Nombre</th><th style="padding:8px 12px; text-align:right; color:#334155;">Proportion</th></tr></thead><tbody>';
 
             let sum = data.reduce((a, b) => a + b, 0);
 
             labels.forEach((label, index) => {
                 let percentage = sum > 0 ? Math.round((data[index] / sum) * 100) : 0;
-                tableHTML += `<tr><td>${label}</td><td>${data[index]}</td><td>${percentage}%</td></tr>`;
+                tableHTML += `<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:8px 12px; font-weight:600; color:#1e293b;">${label}</td><td style="padding:8px 12px; text-align:center; color:#0f172a;">${data[index]}</td><td style="padding:8px 12px; text-align:right; font-weight:700; color:#2563eb;">${percentage}%</td></tr>`;
             });
 
             tableHTML += '</tbody></table>';
@@ -38,6 +36,7 @@
         // Fonction pour créer un camembert
         function createPieChart(canvasId, tableId, labels, data, title, isCategoryChart = false) {
             const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
             const ctx = canvas.getContext('2d');
 
             // Détruire le graphique existant s'il existe
@@ -45,8 +44,6 @@
                 charts[canvasId].destroy();
             }
 
-            // Utiliser les couleurs réservées pour les deux premiers camemberts
-            // Utiliser la palette de couleurs étendue pour les camemberts de catégories
             const backgroundColors = isCategoryChart ?
                 labels.map((_, index) => colorPalette[index % colorPalette.length]) :
                 reservedColors;
@@ -64,31 +61,27 @@
                     responsive: true,
                     plugins: {
                         title: {
-                            display: true,
-                            text: title,
-                            color: 'white',
-                            font: {
-                                size: 16
-                            }
+                            display: false
                         },
                         legend: {
                             position: 'right',
                             labels: {
-                                color: 'white',
+                                color: '#334155',
                                 font: {
-                                    size: 12
+                                    size: 12,
+                                    weight: '600'
                                 }
                             }
                         },
                         datalabels: {
-                            color: 'white',
+                            color: '#ffffff',
                             formatter: (value, ctx) => {
                                 let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
                                 let percentage = Math.round((value / sum) * 100);
-                                return `${percentage}%\n(${value})`;
+                                return value > 0 ? `${percentage}%\n(${value})` : '';
                             },
                             font: {
-                                size: 12,
+                                size: 11,
                                 weight: 'bold'
                             }
                         }
@@ -126,7 +119,6 @@
 
             fetchCourriersDataForMonth(selectedMonth)
                 .then(data => {
-                    // Camembert : Nombre de courriers entrants/sortants (mois sélectionné)
                     createPieChart(
                         'courriersSelectedMonthChart',
                         'courriersSelectedMonthTable',
@@ -135,7 +127,6 @@
                         `Courriers - ${monthName}`
                     );
 
-                    // Vérifiez que les catégories existent avant de créer les camemberts
                     if (data.categoriesArrive && Object.keys(data.categoriesArrive).length > 0) {
                         createPieChart(
                             'categoriesArriveSelectedMonthChart',
@@ -146,7 +137,8 @@
                             true
                         );
                     } else {
-                        document.getElementById('categoriesArriveSelectedMonthChart').parentElement.innerHTML = `<h2 class="chart-title">Catégories des courriers entrants - ${monthName}</h2><p style="color: white; text-align: center;">Aucune donnée disponible.</p>`;
+                        const el = document.getElementById('categoriesArriveSelectedMonthChart');
+                        if (el) el.parentElement.innerHTML = `<h2 class="chart-title">Catégories des courriers entrants - ${monthName}</h2><p style="color: #64748b; text-align: center; padding: 20px;">Aucune donnée disponible.</p>`;
                     }
 
                     if (data.categoriesDepart && Object.keys(data.categoriesDepart).length > 0) {
@@ -159,25 +151,21 @@
                             true
                         );
                     } else {
-                        document.getElementById('categoriesDepartSelectedMonthChart').parentElement.innerHTML = `<h2 class="chart-title">Catégories des courriers sortants - ${monthName}</h2><p style="color: white; text-align: center;">Aucune donnée disponible.</p>`;
+                        const el = document.getElementById('categoriesDepartSelectedMonthChart');
+                        if (el) el.parentElement.innerHTML = `<h2 class="chart-title">Catégories des courriers sortants - ${monthName}</h2><p style="color: #64748b; text-align: center; padding: 20px;">Aucune donnée disponible.</p>`;
                     }
                 })
                 .catch(error => {
                     console.error('Erreur:', error);
-                    document.getElementById('courriersSelectedMonthChart').parentElement.innerHTML = `<h2 class="chart-title">Courriers - ${monthName}</h2><p style="color: white; text-align: center;">Erreur lors de la récupération des données.</p>`;
-                    document.getElementById('categoriesArriveSelectedMonthChart').parentElement.innerHTML = `<h2 class="chart-title">Catégories des courriers entrants - ${monthName}</h2><p style="color: white; text-align: center;">Erreur lors de la récupération des données.</p>`;
-                    document.getElementById('categoriesDepartSelectedMonthChart').parentElement.innerHTML = `<h2 class="chart-title">Catégories des courriers sortants - ${monthName}</h2><p style="color: white; text-align: center;">Erreur lors de la récupération des données.</p>`;
                 });
         }
 
         // Fonction pour récupérer les données des courriers
         function fetchCourriersData() {
-            const currentMonth = new Date().toISOString().slice(0, 7); // Format YYYY-MM
+            const currentMonth = new Date().toISOString().slice(0, 7);
 
-            // Récupérer les données pour le mois en cours
             fetchCourriersDataForMonth(currentMonth)
                 .then(data => {
-                    // Camembert : Nombre de courriers entrants/sortants (mois en cours)
                     createPieChart(
                         'courriersCurrentMonthChart',
                         'courriersCurrentMonthTable',
@@ -186,7 +174,6 @@
                         `Courriers - Mois en cours`
                     );
 
-                    // Vérifiez que les catégories existent avant de créer les camemberts
                     if (data.categoriesArrive && Object.keys(data.categoriesArrive).length > 0) {
                         createPieChart(
                             'categoriesArriveCurrentMonthChart',
@@ -197,7 +184,8 @@
                             true
                         );
                     } else {
-                        document.getElementById('categoriesArriveCurrentMonthChart').parentElement.innerHTML = '<h2 class="chart-title">Catégories des courriers entrants - Mois en cours</h2><p style="color: white; text-align: center;">Aucune donnée disponible.</p>';
+                        const el = document.getElementById('categoriesArriveCurrentMonthChart');
+                        if (el) el.parentElement.innerHTML = '<h2 class="chart-title">Catégories des courriers entrants - Mois en cours</h2><p style="color: #64748b; text-align: center; padding: 20px;">Aucune donnée disponible.</p>';
                     }
 
                     if (data.categoriesDepart && Object.keys(data.categoriesDepart).length > 0) {
@@ -210,17 +198,14 @@
                             true
                         );
                     } else {
-                        document.getElementById('categoriesDepartCurrentMonthChart').parentElement.innerHTML = '<h2 class="chart-title">Catégories des courriers sortants - Mois en cours</h2><p style="color: white; text-align: center;">Aucune donnée disponible.</p>';
+                        const el = document.getElementById('categoriesDepartCurrentMonthChart');
+                        if (el) el.parentElement.innerHTML = '<h2 class="chart-title">Catégories des courriers sortants - Mois en cours</h2><p style="color: #64748b; text-align: center; padding: 20px;">Aucune donnée disponible.</p>';
                     }
                 })
                 .catch(error => {
                     console.error('Erreur:', error);
-                    document.getElementById('courriersCurrentMonthChart').parentElement.innerHTML = '<h2 class="chart-title">Courriers - Mois en cours</h2><p style="color: white; text-align: center;">Erreur lors de la récupération des données.</p>';
-                    document.getElementById('categoriesArriveCurrentMonthChart').parentElement.innerHTML = '<h2 class="chart-title">Catégories des courriers entrants - Mois en cours</h2><p style="color: white; text-align: center;">Erreur lors de la récupération des données.</p>';
-                    document.getElementById('categoriesDepartCurrentMonthChart').parentElement.innerHTML = '<h2 class="chart-title">Catégories des courriers sortants - Mois en cours</h2><p style="color: white; text-align: center;">Erreur lors de la récupération des données.</p>';
                 });
         }
 
-        // Charger les données et afficher les camemberts au chargement de la page
         document.addEventListener('DOMContentLoaded', fetchCourriersData);
         </script>  

@@ -1,23 +1,89 @@
-<?php include 'partials/parametres.php'; ?>
-<link rel="icon" type="image/vnd.icon" href=" conques.ico">
+<?php 
+include_once __DIR__ . '/parametres.php'; 
+include_once __DIR__ . '/lock_system.php';
+
+$daysFr = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+$monthsFr = ['', 'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+$dateFr = $daysFr[date('w')] . ' ' . date('j') . ' ' . $monthsFr[date('n')] . ' ' . date('Y');
+?>
+<link rel="icon" type="image/vnd.icon" href="conques.ico">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <div class="header">
     <div class="header-content">
-        <h1>📬 GestiCourrier-Conques V1.2</h1>
-        <p>
-            <span style="font-weight:bold">G</span>estion <span style="font-weight:bold">É</span>lectronique de <span style="font-weight:bold">D</span>ocument - Mairie de Conques-sur-Orbiel
-            <a href="./version.txt" target="_blank" class="version-link"><i class="fa-solid fa-code-branch"></i> Note de version</a>
-        </p>
+        <div class="header-title-row">
+            <h1 class="brand-title">
+                📬 <span class="brand-open">Open</span><span class="brand-gesti">GestiCourrier</span> <span class="version-badge">V1.3</span>
+            </h1>
+            <a href="<?php echo $urllogiciel; ?>version.txt" target="_blank" class="version-link"><i class="fa-solid fa-code-branch"></i> Note de version</a>
+        </div>
+        <div class="header-subtitle" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <span class="ged-badge">
+                <span class="highlight-letter">G</span>estion 
+                <span class="highlight-letter">É</span>lectronique de 
+                <span class="highlight-letter">D</span>ocuments
+            </span>
+            <span class="header-date-badge" style="background: #f1f5f9; color: #0f172a; padding: 5px 14px; border-radius: 10px; font-size: 0.88rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #cbd5e1; box-shadow: inset 0 1px 2px rgba(255,255,255,0.8), 0 2px 4px rgba(0,0,0,0.04);">
+                <i class="far fa-calendar-alt" style="color: #2563eb; font-size: 1rem;"></i> <?php echo $dateFr; ?>
+            </span>
+        </div>
     </div>
-    <img src="<?php echo $urllogiciel; ?>img/logo-conques.jpg" alt="Logo" class="logo">
+
+    <!-- Bloc Informations Organisme & Statut Mode Saisie / Consultation -->
+    <div class="header-org-container">
+        <!-- Badge Mode Saisie / Consultation -->
+        <div class="lock-status-pill">
+            <?php if ($lockState['is_lock_holder']): ?>
+                <span class="lock-badge active-writer">
+                    <i class="fas fa-edit"></i> <strong>Saisie en cours par : <?php echo htmlspecialchars($lockState['lock_username']); ?> (Vous)</strong>
+                </span>
+                <a href="<?php echo $urllogiciel; ?>lock_action.php?action=release" class="btn-lock-action release" title="Libérer la main pour les autres utilisateurs">
+                    <i class="fas fa-lock-open"></i> Libérer la main
+                </a>
+            <?php elseif ($lockState['is_active']): ?>
+                <span class="lock-badge busy-writer" title="La saisie est actuellement réservée à cet utilisateur">
+                    <i class="fas fa-lock"></i> <strong>Saisie détenue par : <?php echo htmlspecialchars($lockState['lock_username']); ?></strong> (Mode Consultation)
+                </span>
+            <?php else: ?>
+                <span class="lock-badge idle-reader">
+                    <i class="fas fa-info-circle"></i> <strong>Saisie : Personne (Main libre)</strong>
+                </span>
+                <a href="<?php echo $urllogiciel; ?>lock_action.php?action=claim" class="btn-lock-action claim" title="Prendre la main pour pouvoir saisir des courriers">
+                    <i class="fas fa-pen"></i> Prendre la main
+                </a>
+            <?php endif; ?>
+        </div>
+
+        <?php if (!empty($org_settings['raison_sociale']) || !empty($org_settings['adresse']) || !empty($org_settings['ville']) || !empty($org_settings['telephone'])): ?>
+        <div class="header-org-info">
+            <?php if (!empty($org_settings['raison_sociale'])): ?>
+                <div class="org-name"><?php echo htmlspecialchars($org_settings['raison_sociale']); ?></div>
+            <?php endif; ?>
+            <?php if (!empty($org_settings['adresse'])): ?>
+                <div class="org-detail"><?php echo htmlspecialchars($org_settings['adresse']); ?></div>
+            <?php endif; ?>
+            <?php if (!empty($org_settings['code_postal']) || !empty($org_settings['ville'])): ?>
+                <div class="org-detail"><?php echo htmlspecialchars(trim($org_settings['code_postal'] . ' ' . $org_settings['ville'])); ?></div>
+            <?php endif; ?>
+            <?php if (!empty($org_settings['telephone'])): ?>
+                <div class="org-phone"><i class="fas fa-phone-alt"></i> <?php echo htmlspecialchars($org_settings['telephone']); ?></div>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+        <img src="<?php echo htmlspecialchars($org_logo_url); ?>" alt="Logo" class="logo">
+    </div>
 </div>
 <div class="navbar">
-    	<a href="<?php echo $urllogiciel; ?>index.php" id="nav-accueil"><i class="fas fa-home"></i></a>
-    	<a href="<?php echo $urllogiciel; ?>arrive.php" id="nav-arrive" style="border-bottom:4px solid orange">📥Courriers entrants</a>
-   		<a href="<?php echo $urllogiciel; ?>depart.php" id="nav-depart" style="border-bottom:4px solid green">📤 Courriers sortants</a>
-    	<a href="<?php echo $urllogiciel; ?>contact.php" id="nav-contact" style="border-left: 2px solid white">📇 Contacts</a>
-		<a href="<?php echo $urllogiciel; ?>categorie.php" id="nav-categorie">🗂️ Catégories</a>
-		<a href="<?php echo $urllogiciel; ?>utilisateur.php" id="nav-utilisateur">👥 Utilisateurs</a>
-		<a href="<?php echo $urllogiciel; ?>recherche.php" id="nav-reports" target="_blank" style="border-left: 2px solid white">🔎 Rechercher</a>
-		<a href="<?php echo $urllogiciel; ?>parametrage.php" id="nav-parametrage" target="_blank" style="border-left: 2px solid white">🔧 Paramètres</a>
-		<a href="<?php echo $urllogiciel; ?>logout.php" id="connexion" style="border: 3px solid white"><i class="fas fa-sign-out-alt"></i></a>
+    <a href="<?php echo $urllogiciel; ?>index.php" id="nav-accueil"><i class="fas fa-home"></i> Accueil</a>
+    <a href="<?php echo $urllogiciel; ?>arrive.php" id="nav-arrive" class="nav-item-arrive"><i class="fas fa-inbox"></i> Courriers entrants</a>
+    <a href="<?php echo $urllogiciel; ?>depart.php" id="nav-depart" class="nav-item-depart"><i class="fas fa-paper-plane"></i> Courriers sortants</a>
+    <div class="nav-separator"></div>
+    <a href="<?php echo $urllogiciel; ?>contact.php" id="nav-contact"><i class="fas fa-address-book"></i> Contacts</a>
+    <a href="<?php echo $urllogiciel; ?>categorie.php" id="nav-categorie"><i class="fas fa-tags"></i> Catégories</a>
+    <a href="<?php echo $urllogiciel; ?>utilisateur.php" id="nav-utilisateur"><i class="fas fa-users"></i> Utilisateurs</a>
+    <div class="nav-separator"></div>
+    <a href="<?php echo $urllogiciel; ?>recherche.php" id="nav-reports"><i class="fas fa-search"></i> Rechercher</a>
+    <a href="<?php echo $urllogiciel; ?>parametrage.php" id="nav-parametrage"><i class="fas fa-cog"></i> Paramètres</a>
+    <a href="<?php echo $urllogiciel; ?>logout.php" id="connexion" class="nav-item-logout" title="Déconnexion"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
 </div>
+

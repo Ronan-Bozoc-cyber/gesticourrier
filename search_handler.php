@@ -161,6 +161,12 @@ if ($flux === 'ARRIVE' || $flux === 'TOUS') {
         $expediteur_data = $expediteur_result->fetch_assoc();
         $row['expediteur'] = $expediteur_data ? $expediteur_data['name'] : 'Inconnu';
         unset($row['expediteur_id']);
+        // Calcul du nombre de documents joints (document_path à document_path5)
+        $nb_docs = 0;
+        foreach (['document_path','document_path2','document_path3','document_path4','document_path5'] as $dp) {
+            if (!empty($row[$dp])) $nb_docs++;
+        }
+        $row['nb_documents'] = $nb_docs;
         $results[] = $row;
     }
     $stmt_arrive->close();
@@ -189,6 +195,12 @@ if ($flux === 'DEPART' || $flux === 'TOUS') {
         $expediteur_data = $expediteur_result->fetch_assoc();
         $row['expediteur'] = $expediteur_data ? $expediteur_data['name'] : 'Inconnu';
         unset($row['expediteur_id']);
+        // Calcul du nombre de documents joints (document_path à document_path5)
+        $nb_docs = 0;
+        foreach (['document_path','document_path2','document_path3','document_path4','document_path5'] as $dp) {
+            if (!empty($row[$dp])) $nb_docs++;
+        }
+        $row['nb_documents'] = $nb_docs;
         $results[] = $row;
     }
     $stmt_depart->close();
