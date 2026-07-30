@@ -1,6 +1,6 @@
 # OPEN Gesti Courrier v1.3 📬
 
-![Interface principale de Gesti Courrier](img/capture1.jpg)
+![Interface principale de Gesti Courrier](capture1.jpg)
 
 ## Présentation de la GED
 **OPEN Gesti Courrier** est un système de gestion électronique de documents (GED) moderne et open source, spécialement conçu pour la gestion optimisée, centralisée et sécurisée des correspondances d'une organisation. 
@@ -44,7 +44,7 @@ Gesti Courrier propose un utilitaire d'installation en ligne de commande ultra-i
    sudo ./install.sh
    ```
 
-   ![Assistant d'installation en console](img/capture2.jpg)
+   ![Assistant d'installation en console](capture2.jpg)
 
 3. **Suivre le guide interactif :**
    L'assistant vous demandera de choisir entre deux méthodes de déploiement :
