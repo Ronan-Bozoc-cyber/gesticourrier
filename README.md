@@ -78,8 +78,8 @@ OPEN Gesti Courrier propose un ensemble complet de modules pensés pour les flux
 ### ⚙️ Paramétrage et administration
 - **Gestion dynamique des catégories :** les administrateurs peuvent créer et éditer la liste des catégories de courriers selon les besoins de leur structure.
 - **Sauvegarde globale :** module permettant la génération et le téléchargement d'archives compressées (ZIP) contenant une sauvegarde SQL intégrale, protégeant ainsi l'organisation contre la perte de données.
-- **(Fonctionnalité à venir) Restauration système :** restauration instantanée d'une sauvegarde existante.
-- **(Fonctionnalité à venir) Verrouillage de la saisie :** système de prise de contrôle exclusif empêchant la modification simultanée des données par plusieurs collaborateurs.
+- **Restauration système :** restauration instantanée d'une sauvegarde existante.
+- **Verrouillage de la saisie :** système de prise de contrôle exclusif empêchant la modification simultanée des données par plusieurs collaborateurs.
 
 ### ⚖️ Module de purge légale (conformité RGPD)
 - **Purge réglementaire :** mécanisme de suppression automatisée et définitive des données obsolètes selon des durées de conservation personnalisables (ex. : 3 ans, 4 ans, 5 ans).
