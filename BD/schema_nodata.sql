@@ -6734,7 +6734,7 @@ UNLOCK TABLES;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER update_annee_arrive BEFORE INSERT ON courriers_arrive FOR EACH ROW SET NEW.annee = YEAR(NEW.date) 
+/*!50003 CREATE*/ /*!50003 TRIGGER update_annee_arrive BEFORE INSERT ON courriers_arrive FOR EACH ROW SET NEW.annee = YEAR(NEW.date) 
 */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -6750,7 +6750,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER update_annee_arrive_on_update BEFORE UPDATE ON courriers_arrive FOR EACH ROW SET NEW.annee = YEAR(NEW.date) 
+/*!50003 CREATE*/ /*!50003 TRIGGER update_annee_arrive_on_update BEFORE UPDATE ON courriers_arrive FOR EACH ROW SET NEW.annee = YEAR(NEW.date) 
 */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -9061,7 +9061,7 @@ UNLOCK TABLES;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER update_annee_depart BEFORE INSERT ON courriers_depart FOR EACH ROW SET NEW.annee = YEAR(NEW.date) 
+/*!50003 CREATE*/ /*!50003 TRIGGER update_annee_depart BEFORE INSERT ON courriers_depart FOR EACH ROW SET NEW.annee = YEAR(NEW.date) 
 */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -9077,7 +9077,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER update_annee_depart_on_update BEFORE UPDATE ON courriers_depart FOR EACH ROW SET NEW.annee = YEAR(NEW.date) 
+/*!50003 CREATE*/ /*!50003 TRIGGER update_annee_depart_on_update BEFORE UPDATE ON courriers_depart FOR EACH ROW SET NEW.annee = YEAR(NEW.date) 
 */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;

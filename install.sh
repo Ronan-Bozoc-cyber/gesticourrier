@@ -266,7 +266,7 @@ EOF
                 print_warning "ATTENTION : Si la base contient déjà des données, elles seront écrasées."
                 if ask_yes_no "Voulez-vous installer/réinitialiser les tables maintenant ?" "N"; then
                     print_info "Création des tables en cours..."
-                    if mysql $auth_str "$db_name" < "$sql_file"; then
+                    if sed -E 's/\/\*!50017 DEFINER=`[^`]*`@`[^`]*`\*\///g; s/DEFINER=`[^`]*`@`[^`]*`//g' "$sql_file" | mysql $auth_str "$db_name"; then
                         print_success "La structure de base de données est prête !"
                     else
                         print_error "Échec de l'importation de la structure."
