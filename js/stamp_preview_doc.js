@@ -331,6 +331,13 @@ function applyStampStyles() {
     if (!stampOverlay) return;
 
     const cfg = window.STAMP_CONFIG || {};
+    if (cfg.tampon_active === '0') {
+        stampOverlay.style.display = 'none';
+        return;
+    } else {
+        stampOverlay.style.display = 'block';
+    }
+
     const position = cfg.tampon_position || 'top-right';
     const couleur = cfg.tampon_couleur || '#2563eb';
     const opacite = cfg.tampon_opacite ? (parseFloat(cfg.tampon_opacite) / 100) : 0.85;
@@ -387,24 +394,42 @@ function updateDocStampText() {
     if (!stampOverlay) return;
 
     const cfg = window.STAMP_CONFIG || {};
+
+    if (cfg.tampon_active === '0') {
+        stampOverlay.style.display = 'none';
+        return;
+    } else {
+        stampOverlay.style.display = 'block';
+    }
+
     const dateInput = document.getElementById('date');
     const numOrdreInput = document.getElementById('num_ordre');
     const categorieSelect = document.getElementById('categorie_courrier');
+    const fluxInput = document.getElementById('flux');
+    const flux = fluxInput ? fluxInput.value : 'ARRIVE';
 
-    const customText = cfg.tampon_texte_custom || 'ARRIVÉE - COURRIER';
-    const showOrg = (cfg.tampon_show_org === '1');
-    const showNum = (cfg.tampon_show_num === '1');
-    const showDate = (cfg.tampon_show_date === '1');
-    const showCat = (cfg.tampon_show_categorie === '1');
+    const customText = (cfg.tampon_texte_custom !== undefined && cfg.tampon_texte_custom !== '')
+        ? cfg.tampon_texte_custom
+        : (flux === 'ARRIVE' ? 'ARRIVÉE - COURRIER' : 'DÉPART - COURRIER');
 
-    const orgName = cfg.raison_sociale || 'MAIRIE DE CONQUES';
+    const showOrg = ((cfg.tampon_show_org ?? '1') === '1');
+    const showNum = ((cfg.tampon_show_num ?? '1') === '1');
+    const showDate = ((cfg.tampon_show_date ?? '1') === '1');
+    const showCat = ((cfg.tampon_show_categorie ?? '1') === '1');
+    const disposition = cfg.tampon_disposition || 'ligne';
+
+    const orgName = cfg.raison_sociale || 'Mairie de Conques-sur-Orbiel';
 
     let dateVal = dateInput ? dateInput.value : '';
     if (dateVal) {
         const parts = dateVal.split('-');
         if (parts.length === 3) dateVal = `${parts[2]}/${parts[1]}/${parts[0]}`;
     } else {
-        dateVal = '29/07/2026';
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2, '0');
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const yyyy = today.getFullYear();
+        dateVal = `${dd}/${mm}/${yyyy}`;
     }
 
     const numOrdre = (numOrdreInput && numOrdreInput.value) ? numOrdreInput.value : '----';
@@ -413,12 +438,23 @@ function updateDocStampText() {
         catText = categorieSelect.options[categorieSelect.selectedIndex].text;
     }
 
-    let html = '<div class="stamp-content-wrapper">';
-    if (customText) html += `<div style="font-weight:900; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">${escapeHtml(customText)}</div>`;
-    if (showOrg && orgName) html += `<div style="font-weight:700;">${escapeHtml(orgName)}</div>`;
-    if (showNum) html += `<div>N° Ordre : <strong>${escapeHtml(numOrdre)}</strong></div>`;
-    if (showDate) html += `<div>Reçu le : <strong>${escapeHtml(dateVal)}</strong></div>`;
-    if (showCat) html += `<div>Catégorie : <strong>${escapeHtml(catText)}</strong></div>`;
+    const datePrefix = (flux === 'ARRIVE' ? 'Reçu le : ' : 'Parti le : ');
+
+    const items = [];
+    if (customText) items.push(`<strong>${escapeHtml(customText.toUpperCase())}</strong>`);
+    if (showOrg && orgName) items.push(escapeHtml(orgName));
+    if (showNum) items.push(`N° Ordre : <strong>${escapeHtml(numOrdre)}</strong>`);
+    if (showDate) items.push(`${datePrefix}<strong>${escapeHtml(dateVal)}</strong>`);
+    if (showCat && catText && catText !== '---') items.push(`Catégorie : <strong>${escapeHtml(catText)}</strong>`);
+
+    let html = '<div class="stamp-content-wrapper" style="';
+    if (disposition === 'ligne') {
+        html += 'display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-content: center; white-space: nowrap;">';
+        html += items.join('<span style="opacity: 0.6; margin: 0 4px;">|</span>');
+    } else {
+        html += 'display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center;">';
+        html += items.map(it => `<div>${it}</div>`).join('');
+    }
     html += '</div>';
 
     html += '<div class="stamp-resize-handle" title="Glissez horizontalement pour agrandir/réduire le tampon"><i class="fas fa-expand-alt"></i></div>';
