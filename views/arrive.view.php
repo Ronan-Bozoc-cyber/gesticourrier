@@ -406,13 +406,17 @@
                         if (file.path) {
                             const fileName = file.path.split('/').pop();
                             const absolutePath = file.path;
-                            const relativePath = file.path.replace(chemin, '');
-                            const fullPath = urllogiciel + relativePath;
+                            const relativePath = file.path.includes('uploads/') ? ('/uploads/' + fileName) : file.path.replace(chemin, '');
+                            const fullPath = urllogiciel.replace(/\/$/, '') + (relativePath.startsWith('/') ? relativePath : ('/' + relativePath));
                             fileInfoElement.innerHTML = `
-                                <div class="file-actions">
-                                    <a href="#" onclick="openFileModal('${escapeHTML(fullPath)}')">${escapeHTML(fileName)}</a>
-                                    <button type="button" onclick="removeFile('${file.elementId}', '${file.inputName}')">Supprimer</button>
-                                    <input type="hidden" name="${file.inputName}" value="${absolutePath}">
+                                <div class="file-actions" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; padding: 6px 12px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
+                                    <a href="#" onclick="openFileModal('${escapeHTML(fullPath)}')" style="font-size: 0.86rem; font-weight: 600; color: #15803d; text-decoration: underline; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 75%;">
+                                        <i class="fas fa-file-pdf" style="margin-right: 6px;"></i>${escapeHTML(fileName)}
+                                    </a>
+                                    <button type="button" onclick="removeFile('${file.elementId}', '${file.inputName}', '${file.elementId.replace('fileInfo', 'document')}')" style="background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                        <i class="fas fa-trash-alt"></i> Supprimer
+                                    </button>
+                                    <input type="hidden" name="${file.inputName}" value="${escapeHTML(relativePath)}">
                                 </div>
                             `;
                         }
@@ -453,13 +457,32 @@
         fileContent.innerHTML = '';
         fileContent.appendChild(content);
     }
-    function removeFile(elementId, inputName) {
+    function clearFileInput(inputId, fileInfoId) {
+        const input = document.getElementById(inputId);
+        const fileInfoContainer = document.getElementById(fileInfoId);
+        if (input) {
+            input.value = '';
+        }
+        if (fileInfoContainer) {
+            fileInfoContainer.innerHTML = '';
+        }
+        const anyFileSelected = Array.from(document.querySelectorAll('input[type="file"]')).some(i => i.files && i.files[0]);
+        if (!anyFileSelected) {
+            const liveContainer = document.getElementById('live-stamp-preview-container');
+            if (liveContainer) liveContainer.style.display = 'none';
+        }
+    }
+    function removeFile(elementId, inputName, inputId) {
         if (confirm("Êtes-vous sûr de vouloir supprimer ce fichier ?")) {
             const fileInfoElement = document.getElementById(elementId);
             const hiddenInput = fileInfoElement.querySelector(`input[name="${inputName}"]`);
             fileInfoElement.innerHTML = '';
             if (hiddenInput) {
                 hiddenInput.remove();
+            }
+            if (inputId) {
+                const input = document.getElementById(inputId);
+                if (input) input.value = '';
             }
         }
     }
@@ -474,11 +497,17 @@
                 const sizeInMo = (file.size / (1024 * 1024)).toFixed(2);
                 const className = sizeInMo > 2 ? 'file-error' : 'file-ok';
                 fileInfoContainer.innerHTML = `
-                    <div>
-                        <strong>${escapeHTML(fileName)}</strong> (${sizeInMo} Mo)
-                        <span class="${className}">
-                            ${sizeInMo > 2 ? ' (Trop volumineux !)' : ' ✓ OK'}
-                        </span>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; padding: 6px 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        <div style="font-size: 0.86rem; color: #1e293b; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 75%;">
+                            <i class="fas fa-paperclip" style="color: #2563eb; margin-right: 6px;"></i>
+                            <strong>${escapeHTML(fileName)}</strong> <span style="color: #64748b;">(${sizeInMo} Mo)</span>
+                            <span class="${className}">
+                                ${sizeInMo > 2 ? ' ⚠️ (Trop volumineux !)' : ' ✓ OK'}
+                            </span>
+                        </div>
+                        <button type="button" onclick="clearFileInput('${input.id}', '${fileInfoId}')" style="background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;" title="Annuler et supprimer ce fichier">
+                            <i class="fas fa-times"></i> Supprimer
+                        </button>
                     </div>
                 `;
             }

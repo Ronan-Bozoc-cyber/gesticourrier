@@ -582,15 +582,15 @@ function size_format($bytes) {
                 <div class="form-group" style="margin-top: 16px;">
                     <label style="font-weight: 700; color: #334155; display: block; margin-bottom: 10px;">📌 Disposition du tampon :</label>
                     <div style="display: flex; gap: 14px; flex-wrap: wrap;">
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; background: #f8fafc; border: 2px solid <?php echo ($org_settings['tampon_disposition'] ?? 'bloc') === 'bloc' ? '#2563eb' : '#e2e8f0'; ?>; border-radius: 10px; padding: 12px 18px; flex: 1; min-width: 200px; transition: border-color .2s;" id="disp-label-bloc">
-                            <input type="radio" name="tampon_disposition" value="bloc" <?php echo (($org_settings['tampon_disposition'] ?? 'bloc') === 'bloc') ? 'checked' : ''; ?> onchange="updateStampPreview(); updateDispLabel();" style="accent-color: #2563eb; width: 16px; height: 16px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; background: #f8fafc; border: 2px solid <?php echo ($org_settings['tampon_disposition'] ?? 'ligne') === 'bloc' ? '#2563eb' : '#e2e8f0'; ?>; border-radius: 10px; padding: 12px 18px; flex: 1; min-width: 200px; transition: border-color .2s;" id="disp-label-bloc">
+                            <input type="radio" name="tampon_disposition" value="bloc" <?php echo (($org_settings['tampon_disposition'] ?? 'ligne') === 'bloc') ? 'checked' : ''; ?> onchange="updateStampPreview(); updateDispLabel();" style="accent-color: #2563eb; width: 16px; height: 16px;">
                             <span>
                                 <strong style="display: block; color: #1e293b;">📦 Bloc (multi-lignes)</strong>
                                 <small style="color: #64748b;">Chaque info sur une ligne séparée — tampon compact et vertical</small>
                             </span>
                         </label>
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; background: #f8fafc; border: 2px solid <?php echo ($org_settings['tampon_disposition'] ?? 'bloc') === 'ligne' ? '#2563eb' : '#e2e8f0'; ?>; border-radius: 10px; padding: 12px 18px; flex: 1; min-width: 200px; transition: border-color .2s;" id="disp-label-ligne">
-                            <input type="radio" name="tampon_disposition" value="ligne" <?php echo (($org_settings['tampon_disposition'] ?? 'bloc') === 'ligne') ? 'checked' : ''; ?> onchange="updateStampPreview(); updateDispLabel();" style="accent-color: #2563eb; width: 16px; height: 16px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; background: #f8fafc; border: 2px solid <?php echo ($org_settings['tampon_disposition'] ?? 'ligne') === 'ligne' ? '#2563eb' : '#e2e8f0'; ?>; border-radius: 10px; padding: 12px 18px; flex: 1; min-width: 200px; transition: border-color .2s;" id="disp-label-ligne">
+                            <input type="radio" name="tampon_disposition" value="ligne" <?php echo (($org_settings['tampon_disposition'] ?? 'ligne') === 'ligne') ? 'checked' : ''; ?> onchange="updateStampPreview(); updateDispLabel();" style="accent-color: #2563eb; width: 16px; height: 16px;">
                             <span>
                                 <strong style="display: block; color: #1e293b;">➖ Ligne horizontale</strong>
                                 <small style="color: #64748b;">Toutes les infos sur une seule ligne séparées par « | »</small>
@@ -751,7 +751,11 @@ function size_format($bytes) {
                     <?php endif; ?>
                 </tbody>
             </table>
-<div id="tab-archivage" class="tab-content-panel" style="display: none;">
+        </div>
+    </div>
+
+    <!-- ONGLET 4 : PURGE LÉGALE -->
+    <div id="tab-archivage" class="tab-content-panel" style="display: none;">
         <div class="form-section-card" style="border-top: 4px solid #dc2626; margin-bottom: 24px; padding: 24px;">
             <div class="form-section-header" style="margin-bottom: 20px;">
                 <h2 style="color: #dc2626;"><i class="fas fa-trash-alt"></i> Module de Purge Légale</h2>
@@ -1021,7 +1025,7 @@ function updateStampPreview() {
 
     // Disposition (bloc ou ligne)
     const dispEl = document.querySelector('input[name="tampon_disposition"]:checked');
-    const disposition = dispEl ? dispEl.value : 'bloc';
+    const disposition = dispEl ? dispEl.value : 'ligne';
 
     let borderStyle = '2px solid ' + color;
     if (border === 'double') borderStyle = '4px double ' + color;

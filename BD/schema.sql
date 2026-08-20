@@ -212,6 +212,26 @@ CREATE TABLE `users` (
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `destruction_logs`
+--
+
+DROP TABLE IF EXISTS `destruction_logs`;
+CREATE TABLE `destruction_logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `username` varchar(100) NOT NULL,
+  `date_destruction` datetime NOT NULL,
+  `duree_conservation` int(11) NOT NULL,
+  `nb_arrive` int(11) DEFAULT 0,
+  `nb_depart` int(11) DEFAULT 0,
+  `nb_total` int(11) DEFAULT 0,
+  `courriers_json` mediumtext DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

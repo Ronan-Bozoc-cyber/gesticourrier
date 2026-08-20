@@ -42,7 +42,7 @@ function addStampAndCompressPDF($filePath, $flux, $num_ordre, $date, $categorie 
     $defaultSettings = [
         'raison_sociale'       => 'Mairie de Conques-sur-Orbiel',
         'tampon_active'        => '1',
-        'tampon_disposition'   => 'bloc',
+        'tampon_disposition'   => 'ligne',
         'tampon_position'      => 'top-right',
         'tampon_couleur'       => '#2563eb',
         'tampon_opacite'       => '85',
@@ -103,7 +103,7 @@ function addStampAndCompressPDF($filePath, $flux, $num_ordre, $date, $categorie 
         $lines[] = "Catégorie : " . $categorie;
     }
 
-    $disposition = $org_settings['tampon_disposition'] ?? 'bloc';
+    $disposition = $org_settings['tampon_disposition'] ?? 'ligne';
     $separator = ($disposition === 'ligne') ? '  |  ' : "\n";
     $stampText = implode($separator, $lines);
 
@@ -234,8 +234,8 @@ function handleFileUpload($fileKey, $uploadDir, $num_ordre, $flux, $expediteur_n
     if (in_array($fileExtension, ['pdf', 'jpg', 'jpeg', 'png', 'webp'])) {
         addStampAndCompressPDF($uploadFilePath, $flux, $num_ordre, $date, $categorie);
     }
-    // Retourne le chemin absolu
-    return $uploadFilePath;
+    // Retourne le chemin relatif pour la base de données : /uploads/nom_du_fichier
+    return '/uploads/' . $newFileName;
 }
 
 // Traitement du formulaire
@@ -332,7 +332,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!isset($_FILES[$fileKey]) || $_FILES[$fileKey]['error'] === UPLOAD_ERR_NO_FILE) {
             // Si un fichier existant est présent dans les champs cachés, utilise-le
             if (!empty($_POST["existing_document$i"])) {
-                $documentPaths[$fileKey] = $_POST["existing_document$i"];
+                $existingPath = $_POST["existing_document$i"];
+                $documentPaths[$fileKey] = (strpos($existingPath, 'uploads/') !== false) 
+                    ? ('/uploads/' . basename($existingPath)) 
+                    : $existingPath;
                 error_log("Fichier existant conservé pour $fileKey : " . $documentPaths[$fileKey]);
             } else {
                 $documentPaths[$fileKey] = null;

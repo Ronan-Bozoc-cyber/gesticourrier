@@ -24,18 +24,15 @@ if (!is_dir($lockDir)) {
 }
 $lockFile = $lockDir . 'lock_state.json';
 
-if ($action === 'claim') {
-    $currentState = getLockState();
-    if (!$currentState['is_active'] || $currentState['is_lock_holder']) {
-        $newData = [
-            'lock_user_id'   => $currentUserId,
-            'lock_username'  => $currentUser,
-            'lock_timestamp' => $now,
-            'last_activity'  => $now
-        ];
-        @file_put_contents($lockFile, json_encode($newData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-        @chmod($lockFile, 0666);
-    }
+if ($action === 'claim' || $action === 'force_claim') {
+    $newData = [
+        'lock_user_id'   => $currentUserId,
+        'lock_username'  => $currentUser,
+        'lock_timestamp' => $now,
+        'last_activity'  => $now
+    ];
+    file_put_contents($lockFile, json_encode($newData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    @chmod($lockFile, 0666);
 }
 
 if ($action === 'release') {

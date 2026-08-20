@@ -6,7 +6,7 @@
     "telephone": "01 02 03 04 05",
     "logo_filename": "logo-custom.png",
     "tampon_active": "0",
-    "tampon_disposition": "bloc",
+    "tampon_disposition": "ligne",
     "tampon_position": "top-right",
     "tampon_couleur": "#2563eb",
     "tampon_opacite": "85",

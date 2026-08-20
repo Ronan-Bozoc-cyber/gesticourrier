@@ -7,7 +7,7 @@ require_once(__DIR__ . '/../partials/parametres.php');
 // Charger la connexion en utilisant $chemin
 require_once($chemin . 'partials/connexion.php');
 try {
-    $pdo = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
+    $pdo = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8mb4", $username, $password);
 } catch (PDOException $e) {
     die('Erreur de connexion : ' . $e->getMessage());
 }

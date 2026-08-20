@@ -63,5 +63,5 @@ function getLockState() {
 }
 
 $lockState = getLockState();
-$can_edit = $lockState['is_lock_holder'];
+$can_edit = !$lockState['is_active'] || $lockState['is_lock_holder'];
 ?>

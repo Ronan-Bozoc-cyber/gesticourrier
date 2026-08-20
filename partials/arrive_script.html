@@ -120,11 +120,11 @@
                         const label = `Document ${i}`;
                         const path = courrier[pathKey];
 
-                        // V�rifier que le chemin existe, n'est pas vide et n'a pas d�j� �t� trait�
+                        // Vrifier que le chemin existe, n'est pas vide et n'a pas dj t trait
                         if (path && path.trim() !== '' && !usedPaths.includes(path)) {
-                            usedPaths.push(path); // Ajouter le chemin au tableau des chemins trait�s
-
-                            const relativePath = path.replace(chemin, repertoire);
+                            usedPaths.push(path);
+                            const fileName = path.split('/').pop();
+                            const relativePath = path.includes('uploads/') ? ('/uploads/' + fileName) : path.replace(chemin, repertoire);
                             const link = document.createElement('a');
                             link.href = relativePath;
                             link.textContent = label;
@@ -141,9 +141,9 @@
                         }
                     }
 
-                    // Charger les documents associ�s au courrier de d�part
+                    // Charger les documents associés au courrier de départ
                     if (courrier.courrier_depart_id) {
-                        // CORRECTION ICI : Extraire l'ann�e du courrier de d�part
+                        // CORRECTION ICI : Extraire l'année du courrier de départ
                         const courrierDepartAnnee = courrier.courrier_depart_annee || courrierYear;
                         
                         fetch(`get_courrier_documents.php?num_ordre=${courrier.courrier_depart_id}&annee=${courrierDepartAnnee}`)
@@ -153,7 +153,8 @@
                                 if (departLinksCell) {
                                     if (departDocs && departDocs.length > 0) {
                                         departDocs.forEach((doc, index) => {
-                                            const departRelativePath = doc.replace(chemin, repertoire);
+                                            const docName = doc.split('/').pop();
+                                            const departRelativePath = doc.includes('uploads/') ? ('/uploads/' + docName) : doc.replace(chemin, repertoire);
                                             const departLink = document.createElement('a');
                                             departLink.href = departRelativePath;
                                             departLink.textContent = `Document ${index + 1}`;

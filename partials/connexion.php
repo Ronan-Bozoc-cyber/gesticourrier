@@ -37,6 +37,11 @@ if (!class_exists('Database')) {
     }
 }
 
-// Fournir $conn pour la compatibilité avec tous les scripts existants
+// Fournir $conn et les variables globales pour la compatibilité avec tous les scripts existants
+$servername = $_ENV['DB_HOST'] ?? '127.0.0.1';
+$username   = $_ENV['DB_USER'] ?? 'root';
+$password   = $_ENV['DB_PASS'] ?? '';
+$dbname     = $_ENV['DB_NAME'] ?? 'courriers_db';
+
 $conn = Database::getInstance()->getConnection();
 ?>

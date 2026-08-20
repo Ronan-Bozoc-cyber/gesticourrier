@@ -499,7 +499,8 @@ document.getElementById('search-form').addEventListener('submit', function(event
                                 documentPaths.forEach((path) => {
                                     if (path && path.trim() !== '' && !usedPaths.includes(path)) {
                                         usedPaths.push(path);
-                                        const relativePath = path.replace(chemin, repertoire);
+                                        const fileName = path.split('/').pop();
+                                        const relativePath = path.includes('uploads/') ? ('/uploads/' + fileName) : path.replace(chemin, repertoire);
                                         const link = document.createElement('a');
                                         link.href = relativePath;
                                         link.textContent = `📄 Doc ${usedPaths.length}`;
