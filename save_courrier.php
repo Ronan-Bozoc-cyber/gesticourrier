@@ -402,6 +402,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $courrier_exists = $result_check->num_rows > 0;
     $stmt_check->close();
 
+    // Suppression des anciens fichiers physiques remplacés ou supprimés lors de la mise à jour
+    if ($courrier_exists) {
+        $tableCheck = ($flux == 'ARRIVE') ? 'courriers_arrive' : 'courriers_depart';
+        $stmt_old = $conn->prepare("SELECT document_path, document_path2, document_path3, document_path4, document_path5 FROM $tableCheck WHERE num_ordre = ? AND annee = ?");
+        $stmt_old->bind_param("ii", $num_ordre, $year);
+        $stmt_old->execute();
+        $res_old = $stmt_old->get_result();
+        if ($row_old = $res_old->fetch_assoc()) {
+            $oldCols = ['document_path', 'document_path2', 'document_path3', 'document_path4', 'document_path5'];
+            foreach ($oldCols as $idx => $colName) {
+                $oldP = $row_old[$colName] ?? null;
+                $newP = $paths[$idx] ?? null;
+                if (!empty($oldP) && $oldP !== $newP) {
+                    $oldFileOnDisk = __DIR__ . '/uploads/' . basename($oldP);
+                    if (file_exists($oldFileOnDisk)) {
+                        @unlink($oldFileOnDisk);
+                    }
+                }
+            }
+        }
+        $stmt_old->close();
+    }
+
     // Insertion ou mise à jour en base de données
     if ($flux == 'ARRIVE') {
         if ($courrier_exists) {

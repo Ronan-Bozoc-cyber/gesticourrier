@@ -401,7 +401,7 @@
                         { elementId: 'fileInfo5', path: data.document_path5, inputName: 'existing_document5' }
                     ];
 
-                    filePaths.forEach((file) => {
+                    filePaths.forEach((file, index) => {
                         const fileInfoElement = document.getElementById(file.elementId);
                         if (file.path) {
                             const fileName = file.path.split('/').pop();
@@ -413,7 +413,7 @@
                                     <a href="#" onclick="openFileModal('${escapeHTML(fullPath)}')" style="font-size: 0.86rem; font-weight: 600; color: #15803d; text-decoration: underline; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 75%;">
                                         <i class="fas fa-file-pdf" style="margin-right: 6px;"></i>${escapeHTML(fileName)}
                                     </a>
-                                    <button type="button" onclick="removeFile('${file.elementId}', '${file.inputName}', '${file.elementId.replace('fileInfo', 'document')}')" style="background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                    <button type="button" onclick="removeFile('${file.elementId}', '${file.inputName}', '${file.elementId.replace('fileInfo', 'document')}', ${index + 1})" style="background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
                                         <i class="fas fa-trash-alt"></i> Supprimer
                                     </button>
                                     <input type="hidden" name="${file.inputName}" value="${escapeHTML(relativePath)}">
@@ -472,18 +472,49 @@
             if (liveContainer) liveContainer.style.display = 'none';
         }
     }
-    function removeFile(elementId, inputName, inputId) {
-        if (confirm("Êtes-vous sûr de vouloir supprimer ce fichier ?")) {
-            const fileInfoElement = document.getElementById(elementId);
-            const hiddenInput = fileInfoElement.querySelector(`input[name="${inputName}"]`);
+    function removeFile(elementId, inputName, inputId, docNum) {
+        if (confirm("Êtes-vous sûr de vouloir supprimer ce document joint ?")) {
+            const numOrdre = document.getElementById('num_ordre').value;
+            const dateVal = document.getElementById('date').value;
+            const annee = dateVal ? new Date(dateVal).getFullYear() : new Date().getFullYear();
+            const flux = document.getElementById('flux').value || 'ARRIVE';
+
+            if (numOrdre && docNum) {
+                const formData = new FormData();
+                formData.append('num_ordre', numOrdre);
+                formData.append('annee', annee);
+                formData.append('flux', flux);
+                formData.append('doc_num', docNum);
+
+                fetch('delete_courrier_document.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        clearFileInfoElement(elementId, inputId);
+                    } else {
+                        alert("Erreur lors de la suppression : " + (data.error || "Erreur inconnue"));
+                    }
+                })
+                .catch(err => {
+                    console.error("Erreur suppression:", err);
+                    clearFileInfoElement(elementId, inputId);
+                });
+            } else {
+                clearFileInfoElement(elementId, inputId);
+            }
+        }
+    }
+    function clearFileInfoElement(elementId, inputId) {
+        const fileInfoElement = document.getElementById(elementId);
+        if (fileInfoElement) {
             fileInfoElement.innerHTML = '';
-            if (hiddenInput) {
-                hiddenInput.remove();
-            }
-            if (inputId) {
-                const input = document.getElementById(inputId);
-                if (input) input.value = '';
-            }
+        }
+        if (inputId) {
+            const input = document.getElementById(inputId);
+            if (input) input.value = '';
         }
     }
     document.querySelectorAll('input[type="file"]').forEach(function(input, index) {
