@@ -125,7 +125,7 @@
                             usedPaths.push(path); // Ajouter le chemin au tableau des chemins traités
 
                             const fileName = path.split('/').pop();
-                            const relativePath = path.includes('uploads/') ? ('/uploads/' + fileName) : path.replace(chemin, repertoire);
+                            const relativePath = path.includes('uploads/') ? ('uploads/' + fileName) : path.replace(chemin, repertoire).replace(/^\//, '');
                             const link = document.createElement('a');
                             link.href = relativePath;
                             link.textContent = label;
@@ -155,7 +155,7 @@
                                     if (arriveDocs && arriveDocs.length > 0) {
                                         arriveDocs.forEach((doc, index) => {
                                             const docName = doc.split('/').pop();
-                                            const arriveRelativePath = doc.includes('uploads/') ? ('/uploads/' + docName) : doc.replace(chemin, repertoire);
+                                            const arriveRelativePath = doc.includes('uploads/') ? ('uploads/' + docName) : doc.replace(chemin, repertoire).replace(/^\//, '');
                                             const arriveLink = document.createElement('a');
                                             arriveLink.href = arriveRelativePath;
                                             arriveLink.textContent = `Document ${index + 1}`;

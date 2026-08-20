@@ -234,8 +234,8 @@ function handleFileUpload($fileKey, $uploadDir, $num_ordre, $flux, $expediteur_n
     if (in_array($fileExtension, ['pdf', 'jpg', 'jpeg', 'png', 'webp'])) {
         addStampAndCompressPDF($uploadFilePath, $flux, $num_ordre, $date, $categorie);
     }
-    // Retourne le chemin relatif pour la base de données : /uploads/nom_du_fichier
-    return '/uploads/' . $newFileName;
+    // Retourne le chemin relatif pour la base de données : uploads/nom_du_fichier
+    return 'uploads/' . $newFileName;
 }
 
 // Traitement du formulaire
@@ -334,8 +334,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!empty($_POST["existing_document$i"])) {
                 $existingPath = $_POST["existing_document$i"];
                 $documentPaths[$fileKey] = (strpos($existingPath, 'uploads/') !== false) 
-                    ? ('/uploads/' . basename($existingPath)) 
-                    : $existingPath;
+                    ? ('uploads/' . basename($existingPath)) 
+                    : ltrim($existingPath, '/');
                 error_log("Fichier existant conservé pour $fileKey : " . $documentPaths[$fileKey]);
             } else {
                 $documentPaths[$fileKey] = null;

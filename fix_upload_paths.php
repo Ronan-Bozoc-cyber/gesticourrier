@@ -20,7 +20,7 @@ foreach ($tables as $table) {
                 $oldPath = $row[$col];
                 // Extraire le nom de fichier seul
                 $fileName = basename($oldPath);
-                $newPath = '/uploads/' . $fileName;
+                $newPath = 'uploads/' . $fileName;
 
                 if ($oldPath !== $newPath) {
                     $updateStmt = $conn->prepare("UPDATE $table SET $col = ? WHERE id = ?");

@@ -407,8 +407,8 @@
                         if (file.path) {
                             const fileName = file.path.split('/').pop();
                             const absolutePath = file.path;
-                            const relativePath = file.path.includes('uploads/') ? ('/uploads/' + fileName) : file.path.replace(chemin, '');
-                            const fullPath = urllogiciel.replace(/\/$/, '') + (relativePath.startsWith('/') ? relativePath : ('/' + relativePath));
+                            const relativePath = file.path.includes('uploads/') ? ('uploads/' + fileName) : file.path.replace(chemin, '').replace(/^\//, '');
+                            const fullPath = urllogiciel.replace(/\/$/, '') + '/' + relativePath;
                             fileInfoElement.innerHTML = `
                                 <div class="file-actions" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; padding: 6px 12px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
                                     <a href="#" onclick="openFileModal('${escapeHTML(fullPath)}')" style="font-size: 0.86rem; font-weight: 600; color: #15803d; text-decoration: underline; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 75%;">
